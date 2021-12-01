@@ -1,0 +1,15 @@
+test_that("Check configuration file loads", {
+  requiredNames <- c("sourceId",
+                     "database",
+                     "name",
+                     "connectionDetails",
+                     "resultSchema",
+                     "referenceSchema",
+                     "vocabularySchema",
+                     "cdmSchema")
+
+  config <- loadCdmConfiguration(cdmConfigPath)
+  checkmate::expect_names(names(config), must.include = requiredNames)
+
+  validateCdmConfigFile(cdmConfigPath)
+})

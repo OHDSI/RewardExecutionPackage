@@ -1,0 +1,31 @@
+Package: RewardStudyPackage
+Type: Package
+Title: Study package for generating Scc Results for REWARD
+Version: 0.1.0
+Author: James Gilbert
+Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
+Depends:
+	DatabaseConnector (>= 5.0.0),
+	R (>= 4.0.0)
+Imports:
+    jsonlite,
+    ParallelLogger,
+    SqlRender,
+    yaml,
+    SelfControlledCohort,
+    keyring,
+    tools,
+    checkmate
+Suggests:
+    testthat,
+    withr,
+    Eunomia
+Remotes:
+    OHDSI/SelfControlledCohort,
+    OHDSI/Eunomia
+Description: Study package for generating reward results.
+    Uses SelfControlledCohort package to generate effect estimates.
+    Handles uploading of results to reward system.
+License: Apache
+Encoding: UTF-8
+LazyData: true
