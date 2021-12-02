@@ -19,7 +19,8 @@ Imports:
 Suggests:
     testthat,
     withr,
-    Eunomia
+    Eunomia,
+    R.utils
 Remotes:
     OHDSI/SelfControlledCohort,
     OHDSI/Eunomia

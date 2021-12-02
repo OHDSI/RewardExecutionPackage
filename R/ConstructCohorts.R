@@ -8,13 +8,13 @@
 #' @param deleteExisting                delete any existing computed cohorts
 #' @export
 createCohorts <- function(connection, config, deleteExisting = FALSE) {
-  SqlRender::loadRenderTranslateSql("cohorts/createCohortTable.sql",
+  sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohortTable.sql",
                                     package = "RewardStudyPackage",
                                     dbms = connection@dbms,
                                     cohort_database_schema = config$resultSchema,
                                     cohort_table = config$tables$cohort,
                                     delete_existing = deleteExisting)
-  DatabaseCoonector::executeSql(connection, sql)
+  DatabaseConnector::executeSql(connection, sql)
 
   sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohorts.sql",
                                            package = "RewardStudyPackage",
@@ -27,21 +27,8 @@ createCohorts <- function(connection, config, deleteExisting = FALSE) {
                                            cohort_table = config$tables$cohort,
                                            cohort_definition = config$tables$cohortDefinition)
 
-  customExposureSql <- SqlRender::loadRenderTranslateSql("cohorts/addCustomExposureCohorts.sql",
-                                                         package = "RewardStudyPackage",
-                                                         dbms = connection@dbms,
-                                                         cdm_database_schema = config$cdmSchema,
-                                                         reference_schema = config$referenceSchema,
-                                                         drug_era_schema = config$cdmSchema, # Use cdm drug eras
-                                                         cohort_database_schema = config$resultSchema,
-                                                         vocab_schema = config$vocabularySchema,
-                                                         cohort_table = config$tables$cohort,
-                                                         cohort_definition = config$tables$cohortDefinition,
-                                                         custom_exposure = config$tables$customExposure,
-                                                         custom_exposure_concept = config$tables$customExposureConcept,
-                                                         only_add_subset = 0)
-  DatabaseCoonector::executeSql(connection, sql)
-  DatabaseCoonector::executeSql(connection, customExposureSql)
+  DatabaseConnector::executeSql(connection, sql)
+
   # Custom drug eras
   if (!is.null(config$drugEraSchema)) {
     sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohorts.sql",
@@ -54,22 +41,7 @@ createCohorts <- function(connection, config, deleteExisting = FALSE) {
                                              vocab_schema = config$vocabularySchema,
                                              cohort_table = config$tables$cohort,
                                              cohort_definition = config$tables$cohortDefinition)
-
-    customExposureSql <- SqlRender::loadRenderTranslateSql("cohorts/addCustomExposureCohorts.sql",
-                                                           package = "RewardStudyPackage",
-                                                           dbms = connection@dbms,
-                                                           cdm_database_schema = config$cdmSchema,
-                                                           reference_schema = config$referenceSchema,
-                                                           drug_era_schema = config$drugEraSchema,
-                                                           cohort_database_schema = config$resultSchema,
-                                                           vocab_schema = config$vocabularySchema,
-                                                           cohort_table = config$tables$cohort,
-                                                           cohort_definition = config$tables$cohortDefinition,
-                                                           custom_exposure = config$tables$customExposure,
-                                                           custom_exposure_concept = config$tables$customExposureConcept,
-                                                           only_add_subset = 0)
-    DatabaseCoonector::executeSql(connection, sql)
-    DatabaseCoonector::executeSql(connection, customExposureSql)
+    DatabaseConnector::executeSql(connection, sql)
   }
 
   computeAtlasCohorts(connection, config, exposureCohorts = TRUE)

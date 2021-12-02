@@ -8,8 +8,6 @@ CONST_REFERENCE_TABLES <- c(
   "atlas_outcome_concept",
   "atlas_exposure_reference",
   "atlas_exposure_concept",
-  "custom_exposure",
-  "custom_exposure_concept",
   "analysis_setting"
 )
 
@@ -18,6 +16,12 @@ CONST_RESULTS_TABLES <- c(
   "cohort",
   "scc_result"
 )
+
+CONST_EXCLUDE_REF_COLS <- list(
+  "atlasOutcomeReference" = c("SQL_DEFINITION", "DEFINITION"),
+  "atlasExposureReference" = c("SQL_DEFINITION", "DEFINITION")
+)
+
 
 #' @title
 #' Unzip and verify results zip with meta-data json
@@ -74,6 +78,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
   checkmate::assertFileExists(zipFilePath)
   unzipAndVerify(zipFilePath, cdmConfig$referencePath, TRUE)
 
+  ParallelLogger::logInfo("Creating reference tables")
   sql <- SqlRender::loadRenderTranslateSql(
     "create/referenceTables.sql",
     package = "RewardStudyPackage",
@@ -86,8 +91,6 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
     atlas_outcome_concept = cdmConfig$tables$atlasOutcomeConcept,
     atlas_exposure_reference = cdmConfig$tables$atlasExposureReference,
     atlas_exposure_concept = cdmConfig$tables$atlasExposureConcept,
-    custom_exposure = cdmConfig$tables$customExposure,
-    custom_exposure_concept = cdmConfig$tables$customExposureConcept,
     analysis_setting = cdmConfig$tables$analysisSetting
   )
   DatabaseConnector::executeSql(connection, sql)
@@ -96,10 +99,12 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
   for (file in fileList) {
     camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
     tableName <- cdmConfig$tables[[camelName]]
+
+    ParallelLogger::logInfo("Inserting reference table ", tableName)
     ParallelLogger::logDebug(paste("Using insert table", camelName, tableName, file))
     data <- read.csv(file)
 
-    # Remove columns we don't want to store on the CDM
+    # Remove columns we don't want to store on the CDM (big text strings aren't friendly with redshift)
     if (camelName %in% names(CONST_EXCLUDE_REF_COLS)) {
       data <- data[, !(names(data) %in% CONST_EXCLUDE_REF_COLS[[camelName]])]
       ParallelLogger::logDebug(names(data))

@@ -5,9 +5,13 @@ unlink(cfg$connectionDetails$server)
 connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cfg$connectionDetails$server)
 connection <- DatabaseConnector::connect(connectionDetails)
 
+referenceZipPath <- tempfile(fileext = ".zip")
+makeTestReferenceZip(pathToZip = referenceZipPath)
+
 withr::defer({
   # Always disconnect
   DatabaseConnector::disconnect(connection)
   # Clean up Eunomia instance
   unlink(cfg$connectionDetails$server)
+  unlink(referenceZipPath)
 }, testthat::teardown_env())

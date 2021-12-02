@@ -1,3 +1,5 @@
+.PackageName = "RewardStudyPackage"
+
 #' load cdm config object
 #' @description
 #' Loads config and prompt user for db password
