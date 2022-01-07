@@ -1,5 +1,3 @@
-.PackageName = "RewardStudyPackage"
-
 #' load cdm config object
 #' @description
 #' Loads config and prompt user for db password
@@ -182,4 +180,8 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE) {
   }
 
    ParallelLogger::logInfo("Configuration appears valid")
+}
+
+.pkgName <- function() {
+  rewardb::.pkgName()
 }

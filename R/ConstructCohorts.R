@@ -9,7 +9,7 @@
 #' @export
 createCohorts <- function(connection, config, deleteExisting = FALSE) {
   sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohortTable.sql",
-                                    package = "RewardStudyPackage",
+                                    package = packageName(),
                                     dbms = connection@dbms,
                                     cohort_database_schema = config$resultSchema,
                                     cohort_table = config$tables$cohort,
@@ -17,7 +17,7 @@ createCohorts <- function(connection, config, deleteExisting = FALSE) {
   DatabaseConnector::executeSql(connection, sql)
 
   sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohorts.sql",
-                                           package = "RewardStudyPackage",
+                                           package = packageName(),
                                            dbms = connection@dbms,
                                            cdm_database_schema = config$cdmSchema,
                                            reference_schema = config$referenceSchema,
@@ -32,7 +32,7 @@ createCohorts <- function(connection, config, deleteExisting = FALSE) {
   # Custom drug eras
   if (!is.null(config$drugEraSchema)) {
     sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohorts.sql",
-                                             package = "RewardStudyPackage",
+                                             package = packageName(),
                                              dbms = connection@dbms,
                                              cdm_database_schema = config$cdmSchema,
                                              reference_schema = config$referenceSchema,
@@ -98,7 +98,6 @@ getUncomputedAtlasCohorts <- function(connection, config, exposureCohorts = FALS
 #' @param config                        cdm configuration
 #' @param deleteExisting                remove existing data
 createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
-
   ParallelLogger::logInfo("Creating concept ancestor grouping and table")
   sql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "createOutcomeCohorts.sql", package = "RewardStudyPackage"))
   DatabaseConnector::renderTranslateExecuteSql(connection,
@@ -203,12 +202,12 @@ computeAtlasCohorts <- function(connection, config, exposureCohorts = FALSE) {
 createCustomDrugEras <- function(connection, config) {
   ParallelLogger::logInfo("Creating custom drug eras")
   sql <- SqlRender::loadRenderTranslateSql("cohorts/customDrugEraTable.sql",
-                                           package = "RewardStudyPackage",
+                                           package = packageName(),
                                            dbms = connection@dbms,
                                            cdm_database = config$cdmSchema,
                                            drug_era_schema = config$drugEraSchema)
   DatabaseConnector::executeSql(connection, sql = sql)
-  drugEras <- vroom::vroom(system.file("csv", "custom_drug_eras.csv", package = "RewardStudyPackage"))
+  drugEras <- vroom::vroom(system.file("csv", "custom_drug_eras.csv", package = packageName()))
 
   ParallelLogger::logInfo("Inserting custom drug eras")
   DatabaseConnector::insertTable(connection,
@@ -221,7 +220,7 @@ createCustomDrugEras <- function(connection, config) {
 
   ParallelLogger::logInfo("Computing custom drug eras")
   sql <- SqlRender::loadRenderTranslateSql("cohorts/customDrugEra.sql",
-                                           package = "RewardStudyPackage",
+                                           package = packageName(),
                                            dbms = connection@dbms,
                                            cdm_database = config$cdmSchema,
                                            drug_era_schema = config$drugEraSchema)

@@ -81,7 +81,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
   ParallelLogger::logInfo("Creating reference tables")
   sql <- SqlRender::loadRenderTranslateSql(
     "create/referenceTables.sql",
-    package = "RewardStudyPackage",
+    package = packageName(),
     dbms = connection@dbms,
     schema = cdmConfig$referenceSchema,
     concept_set_definition = cdmConfig$tables$conceptSetDefinition,

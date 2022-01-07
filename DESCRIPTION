@@ -1,6 +1,6 @@
-Package: RewardStudyPackage
+Package: RewardExecutionPackage
 Type: Package
-Title: Study package for generating Scc Results for REWARD
+Title: REWARD Execution Package
 Version: 0.1.0
 Author: James Gilbert
 Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
@@ -24,7 +24,7 @@ Suggests:
 Remotes:
     OHDSI/SelfControlledCohort,
     OHDSI/Eunomia
-Description: Study package for generating reward results.
+Description: Study execution package for generating REWARD results.
     Uses SelfControlledCohort package to generate effect estimates.
     Handles uploading of results to reward system.
 License: Apache
