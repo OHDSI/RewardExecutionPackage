@@ -14,4 +14,5 @@ withr::defer({
   # Clean up Eunomia instance
   unlink(cfg$connectionDetails$server)
   unlink(referenceZipPath)
+  unlink(cfg$exportFolder)
 }, testthat::teardown_env())

@@ -1,5 +1,5 @@
 library(testthat)
 library(checkmate)
-library(RewardStudyPackage)
+library(RewardExecutionPackage)
 
-test_check("RewardStudyPackage")
+test_check("RewardExecutionPackage")

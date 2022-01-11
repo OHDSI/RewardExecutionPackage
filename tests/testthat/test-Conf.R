@@ -12,4 +12,6 @@ test_that("Check configuration file loads", {
   checkmate::expect_names(names(config), must.include = requiredNames)
 
   validateCdmConfigFile(cdmConfigPath)
+
+  expect_s3_class(config, "CdmConfig")
 })

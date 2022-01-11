@@ -1,4 +1,6 @@
-# REal World Assessment of Drug (REWARD) performance Study Package
+# REal World Assessment of Drug (REWARD) performance Execution Package
+
+**This Package is under heavy development and is not intended for usage at this stage.**
 
 This package represents the implementation of REWARD, a toolset built on top of OHDSI HADES library
 of standard methods for observational healthcare research.
@@ -23,7 +25,7 @@ renv::restore()
 ## Usage
 First, create a configuration file for your CDM.
 ```r
-createCdmConfiguration("myCdm.yml")
+createCdmConfiguration("myCdmConfig.yml")
 ```
 
 Now we want to run a task that will create cohorts and run the SCC analysis,

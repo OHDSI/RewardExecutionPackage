@@ -11,10 +11,10 @@
   "Packages": {
     "DBI": {
       "Package": "DBI",
-      "Version": "1.1.1",
+      "Version": "1.1.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "030aaec5bc6553f35347cbb1e70b1a17"
+      "Hash": "dcd1743af4336156873e3ce3c950b8b9"
     },
     "DatabaseConnector": {
       "Package": "DatabaseConnector",
@@ -70,6 +70,13 @@
       "Repository": "CRAN",
       "Hash": "470851b6d5d0ac559e9d01bb352b4021"
     },
+    "RJSONIO": {
+      "Package": "RJSONIO",
+      "Version": "1.3-1.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0c7658433758cea5bcae50edd02b55b7"
+    },
     "RSQLite": {
       "Package": "RSQLite",
       "Version": "2.2.8",
@@ -84,24 +91,32 @@
       "Repository": "CRAN",
       "Hash": "dab19adae4440ae55aa8a9d238b246bb"
     },
+    "RewardStudyPackage": {
+      "Package": "RewardStudyPackage",
+      "Version": "0.1.0",
+      "Source": "unknown",
+      "Remotes": "OHDSI/SelfControlledCohort, OHDSI/Eunomia",
+      "Hash": "d36cb83934d71612b5c783e6c72ebf6b"
+    },
     "SelfControlledCohort": {
       "Package": "SelfControlledCohort",
-      "Version": "1.5.1",
+      "Version": "1.6.0",
       "Source": "GitHub",
+      "Remotes": "ohdsi/Eunomia",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "SelfControlledCohort",
-      "RemoteUsername": "OHDSI",
+      "RemoteRepo": "selfcontrolledCohort",
+      "RemoteUsername": "ohdsi",
       "RemoteRef": "HEAD",
-      "RemoteSha": "bdd30c2b16abf0e0ca80daff2a13a9703c55cef1",
-      "Hash": "0321d9ad25b7a78e175c2189bdc84b8c"
+      "RemoteSha": "01d5c4c4907171c87f6e4fb866eaa6af1a52fe68",
+      "Hash": "4344a863302b8ce4a27c3387b9cc9fb8"
     },
     "SqlRender": {
       "Package": "SqlRender",
-      "Version": "1.8.1",
+      "Version": "1.8.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "8df2d8f7b0914e276bd4ccb74e3f7e27"
+      "Hash": "21bf5449b082735ef75e8b84e7f69934"
     },
     "askpass": {
       "Package": "askpass",
@@ -229,6 +244,13 @@
       "Repository": "CRAN",
       "Hash": "49b5c6e230bfec487b8917d5a0c77cca"
     },
+    "dplyr": {
+      "Package": "dplyr",
+      "Version": "1.0.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "36f1ae62f026c8ba9f9b5c9a08c03297"
+    },
     "ellipsis": {
       "Package": "ellipsis",
       "Version": "0.3.2",
@@ -264,12 +286,19 @@
       "Repository": "CRAN",
       "Hash": "38ec653c2613bed60052ba3787bd8a2c"
     },
-    "glue": {
-      "Package": "glue",
-      "Version": "1.5.0",
+    "generics": {
+      "Package": "generics",
+      "Version": "0.1.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "5ccb956a6d09b4ca448094582f8c7571"
+      "Hash": "3f6bcfb0ee5d671d9fd1893d2faa79cb"
+    },
+    "glue": {
+      "Package": "glue",
+      "Version": "1.6.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b8bb7aaf248e45bac08ebed86f3a0aa4"
     },
     "hms": {
       "Package": "hms",
@@ -392,10 +421,10 @@
     },
     "rJava": {
       "Package": "rJava",
-      "Version": "1.0-5",
+      "Version": "1.0-6",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "8de045f6ab6a11448c75450aeedc2247"
+      "Hash": "0415819f6baa75d86d52483f7292b623"
     },
     "rappdirs": {
       "Package": "rappdirs",
@@ -413,10 +442,10 @@
     },
     "readr": {
       "Package": "readr",
-      "Version": "2.1.0",
+      "Version": "2.1.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "6c825746f32a68f4d8c40f94da5b1ac5"
+      "Hash": "e9df4b445fca203653f04ece2f97d51e"
     },
     "rematch2": {
       "Package": "rematch2",
@@ -546,10 +575,10 @@
     },
     "vroom": {
       "Package": "vroom",
-      "Version": "1.5.6",
+      "Version": "1.5.7",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "0af818392e60673cd8968ab9119c30a7"
+      "Hash": "976507b5a105bc3bdf6a5a5f29e0684f"
     },
     "waldo": {
       "Package": "waldo",
@@ -567,10 +596,10 @@
     },
     "xml2": {
       "Package": "xml2",
-      "Version": "1.3.2",
+      "Version": "1.3.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "d4d71a75dd3ea9eb5fa28cc21f9585e2"
+      "Hash": "40682ed6a969ea5abfd351eb67833adc"
     },
     "yaml": {
       "Package": "yaml",

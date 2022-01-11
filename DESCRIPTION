@@ -12,10 +12,12 @@ Imports:
     ParallelLogger,
     SqlRender,
     yaml,
-    SelfControlledCohort,
+    SelfControlledCohort (>= 1.6.0),
     keyring,
     tools,
-    checkmate
+    checkmate,
+    vroom,
+    dplyr
 Suggests:
     testthat,
     withr,

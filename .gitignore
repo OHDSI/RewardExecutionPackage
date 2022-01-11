@@ -3,3 +3,5 @@
 /.Rprofile
 /RewardStudyPackage.Rproj
 /tests/testthat/test_reference_files/rb-meta.json
+/.idea/
+*errorReportSql.txt

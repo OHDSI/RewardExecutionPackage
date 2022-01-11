@@ -1,3 +1,19 @@
+# Copyright 2022 Observational Health Data Sciences and Informatics
+#
+# This file is part of SelfControlledCohort
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' load cdm config object
 #' @description
 #' Loads config and prompt user for db password
@@ -10,8 +26,8 @@ loadCdmConfiguration <- function(cdmConfigPath) {
   checkmate::assertFileExists(cdmConfigPath)
   defaults <- list(
     useSecurePassword = FALSE,
-    bulkUpload = FALSE,
-    performActiveDataTransfer = FALSE
+    bulkUpload = TRUE,
+    customDrugErasCsv = ""
   )
   config <- yaml::read_yaml(cdmConfigPath)
   config <- .setDefaultOptions(config, defaults)
@@ -39,6 +55,8 @@ loadCdmConfiguration <- function(cdmConfigPath) {
     options("sqlRenderTempEmulationSchema" = config$sqlRenderTempEmulationSchema)
   }
 
+  class(config) <- "CdmConfig"
+
   return(config)
 }
 
@@ -60,7 +78,7 @@ loadCdmConfiguration <- function(cdmConfigPath) {
 #' @export
 createCdmConfiguration <- function(cdmConfigPath, overwrite = FALSE, testConnection = TRUE) {
   # Copy default file
-  defaultCdmPath <- system.file("yml", "default.cdm.yml", package = "RewardStudyPackage")
+  defaultCdmPath <- system.file("yml", "default.cdm.yml", package = "RewardExecutionPackage")
 
   if (!base::file.exists(cdmConfigPath) | overwrite) {
     ParallelLogger::logInfo("Creating new configuration file")
@@ -180,8 +198,4 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE) {
   }
 
    ParallelLogger::logInfo("Configuration appears valid")
-}
-
-.pkgName <- function() {
-  rewardb::.pkgName()
 }

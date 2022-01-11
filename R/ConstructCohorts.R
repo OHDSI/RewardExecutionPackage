@@ -1,3 +1,19 @@
+# Copyright 2022 Observational Health Data Sciences and Informatics
+#
+# This file is part of SelfControlledCohort
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' @title
 #' Create exposure cohorts
 #' @description
@@ -99,7 +115,7 @@ getUncomputedAtlasCohorts <- function(connection, config, exposureCohorts = FALS
 #' @param deleteExisting                remove existing data
 createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
   ParallelLogger::logInfo("Creating concept ancestor grouping and table")
-  sql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "createOutcomeCohorts.sql", package = "RewardStudyPackage"))
+  sql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "createOutcomeCohorts.sql", package = utils::packageName()))
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                sql = sql,
                                                cohort_database_schema = config$resultSchema,
@@ -109,20 +125,20 @@ createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
   outcomeTypes <- list(
     type0 = list(
       type = 0,
-      sql = SqlRender::readSql(system.file("sql/sql_server/cohorts", "createType0OutcomeCohorts.sql", package = "RewardStudyPackage"))
+      sql = SqlRender::readSql(system.file("sql/sql_server/cohorts", "createType0OutcomeCohorts.sql", package = utils::packageName()))
     ),
     type1 = list(
       type = 1,
-      sql = SqlRender::readSql(system.file("sql/sql_server/cohorts", "createType1OutcomeCohorts.sql", package = "RewardStudyPackage"))
+      sql = SqlRender::readSql(system.file("sql/sql_server/cohorts", "createType1OutcomeCohorts.sql", package = utils::packageName()))
     ),
     type2 = list(
       type = 2,
-      sql = SqlRender::readSql(system.file("sql/sql_server/cohorts", "createType2OutcomeCohorts.sql", package = "RewardStudyPackage"))
+      sql = SqlRender::readSql(system.file("sql/sql_server/cohorts", "createType2OutcomeCohorts.sql", package = utils::packageName()))
     )
   )
 
   # Build our set of already computed cohorts (ones with records).
-  computedCohortsSql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "outcomeComputedCohorts.sql", package = "RewardStudyPackage"))
+  computedCohortsSql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "outcomeComputedCohorts.sql", package = utils::packageName()))
   DatabaseConnector::renderTranslateExecuteSql(
     connection,
     computedCohortsSql,
@@ -130,7 +146,7 @@ createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
     outcome_cohort_table = config$tables$outcomeCohort
   )
 
-  computeSql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "outcomeCohortsToCompute.sql", package = "RewardStudyPackage"))
+  computeSql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "outcomeCohortsToCompute.sql", package = utils::packageName()))
   # Closure calls sql to create uncomputed cohorts
   cohortsToCompute <- function(oType) {
     DatabaseConnector::renderTranslateExecuteSql(connection,
@@ -192,22 +208,29 @@ computeAtlasCohorts <- function(connection, config, exposureCohorts = FALSE) {
 
 #' @title
 #' Create custom drug eras
+
+
 #' @description
 #' create the custom drug eras, these are for drugs with nonstandard eras (e.g. where doeses aren't picked up by
 #' repeat perscriptions). Could be something like a vaccine where exposed time is non trivial.
 #' deprecated It is now best to use atlas cohort definitions, will be removed in future version
-#' @param configPath            path to cdm config
+#' @param connection                    DatabaseConnector connection
+#' @param config                        CdmConfig object
 #' @export
 #' @importFrom vroom vroom
 createCustomDrugEras <- function(connection, config) {
   ParallelLogger::logInfo("Creating custom drug eras")
   sql <- SqlRender::loadRenderTranslateSql("cohorts/customDrugEraTable.sql",
-                                           package = packageName(),
+                                           package = utils::packageName(),
                                            dbms = connection@dbms,
                                            cdm_database = config$cdmSchema,
                                            drug_era_schema = config$drugEraSchema)
   DatabaseConnector::executeSql(connection, sql = sql)
-  drugEras <- vroom::vroom(system.file("csv", "custom_drug_eras.csv", package = packageName()))
+  drugEras <- vroom::vroom(system.file("csv", "custom_drug_eras.csv", package = utils::packageName()))
+
+  if (file.exists(config$customDrugErasCsv)) {
+    drugEras <- rbind(drugEras, vroom::vroom(config$customDrugErasCsv))
+  }
 
   ParallelLogger::logInfo("Inserting custom drug eras")
   DatabaseConnector::insertTable(connection,
@@ -220,7 +243,7 @@ createCustomDrugEras <- function(connection, config) {
 
   ParallelLogger::logInfo("Computing custom drug eras")
   sql <- SqlRender::loadRenderTranslateSql("cohorts/customDrugEra.sql",
-                                           package = packageName(),
+                                           package = utils::packageName(),
                                            dbms = connection@dbms,
                                            cdm_database = config$cdmSchema,
                                            drug_era_schema = config$drugEraSchema)
