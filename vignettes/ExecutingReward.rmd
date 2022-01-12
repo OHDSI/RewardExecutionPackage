@@ -1,0 +1,182 @@
+---
+title: "Executing Reward"
+date: "`r Sys.Date()`"
+always_allow_html: yes
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    template: null
+  html_document:
+    number_sections: yes
+    toc: yes
+  rmarkdown::html_vignette: default
+vignette: |
+  %\VignetteIndexEntry{Executing Reward}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{css echo=FALSE}
+h1  {
+  margin-top: 60px;
+}
+```
+# Introduction
+REWARD is designed to be a rapid platform for producing population level effect estimates from observational healthcare data.
+This package forms the execution proportion of REWARD - the minimum amount of code required to generate results.
+
+Note: further analysis (unblinding) of results requires a more principled approach than is provided in this vignette
+
+# Installation and configuration of execution environment
+
+We recommend creating a new RStudio project and using `renv` to manage packages related to REWARD.
+
+```{r eval=FALSE}
+# In a new rstudio environment
+install.packages("renv")
+renv::init()
+```
+The next step is to install the latest version of the `RewardExecutionPackage`.
+This can be achieved as follows (requires `remotes` R package).
+
+```{r eval=FALSE}
+# In a new rstudio environment
+install.packages("remotes")
+remotes::install_github("ohdsi/RewardExecutionPackage")
+```
+Providing your environment is configured correctly, the package should be installed correctly.
+
+# Creating a CDM configuration YAML file
+To execute the REWARD components we must first create a configuration file that determines the usage of a CDM.
+This details the relevant tables, database schemas and other parameters required to execute a study.
+The simplest way to do this is to use the utility function provided in the package as follows:
+
+```{r eval=FALSE}
+createCdmConfiguration("myCdmConfig.yml", useKeyring = TRUE)
+```
+This will create the file `myCdmConfig.yml` and load up an editor that will require you to alter the configuration specific to your cdm.
+
+## Data source information
+
+This should be information that is unique to your CDM.
+The `sourceId` won't be relevant unless it is registed in the central reward database.
+However, the database and name should be the cdm on your system.
+```{yml}
+sourceId: 0
+database: MyCdmDatabaseName
+name: MyCdmFriendlyName
+```
+## File storage
+
+```{yaml}
+exportPath: "export"
+referencePath: "reference_files"
+```
+The file storage locations are crucial, the path to `export` should be a location on disk that is at least 25GB in size
+as results from the REWARD analysis can be large.
+
+The reference files path is just a location where the cohort definitions for reward can be stored.
+These should be provided from the central reward database.
+
+## Setting Connection Details
+Crucially, reward needs to be able to connect to your CDM.
+These settings should conform to a `DatabaseConnector connectionDetails` object.
+However, reward does not require a password to be stored in plaintext in this configuration (though, this can optionally be done
+if you have lower security requirements).
+```{yaml}
+connectionDetails:
+  dbms: "postgresql"
+  server: "localhost/reward"
+  port: 5432
+  # If username is unset it will be the system username
+  # Alternatively, set environment variable REWARD_CDM_USER
+  user: "postgres"
+
+# use keyring package for storing database credentials
+useSecurePassword: True
+keyringService: "reward_cdm"
+
+# Use DatabaseConnector bulk upload, where possible
+# See DatabaseConnector documentation for more information
+bulkUpload: True
+```
+Because the `useSecurePassword` parameter is set to true, the database password you use for your cdm will be stored securely for reuse
+using the r `keyring` package.
+You should be prompted for this password when you press save.
+For more details on how this works, consult the keyring documentation [here](https://r-lib.github.io/keyring/index.html).
+If you intend to execute this packge on multiple cdms that have the same user credentials, this information does not
+need to be re-entered when you
+
+## Schemas and tables
+The following settings are likely specific to your CDM and need to be configured.
+We strongly suggest you have an isolated `reward` database schema for reward that can be written to, separate from your CDM.
+This single schema can contain cohort results as well as references.
+The location of your cdm and vocabulary may be the same.
+```{yaml}
+
+# Where cohort results are stored
+resultSchema: "reward"
+# Where reference files are imported
+referenceSchema: "reward"
+# OMOP Common Data Model Schema
+cdmSchema: "cdmv5"
+# schema that contains OMOP vocabulary tables
+vocabularySchema: "cdmv5"
+# Optional: schema for storing custom drug eras
+drugEraSchema: "reward"
+```
+These are the tables used by reward.
+These only need to be changed if they conflict with other tables in your schema (e.g. if you are executing reward on multiple CDMS on the same database).
+```{yaml}
+# Tables to be created and used by REWARD
+tables:
+  outcomeCohort: "outcome_cohort"
+  cohort: "exposure_cohort"
+  sccResult: "scc_result"
+  # Reference table definitions
+  cohortDefinition: "cohort_definition"
+  outcomeCohortDefinition: "outcome_cohort_definition"
+  conceptSetDefinition: "concept_set_definition"
+  atlasOutcomeReference: "atlas_outcome_reference"
+  atlasOutcomeConcept: "atlas_outcome_concept"
+  atlasExposureReference: "atlas_exposure_reference"
+  atlasExposureConcept: "atlas_exposure_concept"
+  customExposure: "custom_exposure"
+  customExposureConcept: "custom_exposure_concept"
+  analysisSetting: "analysis_setting"
+```
+## Testing the configuration
+By default, the information you use will be tested.
+This includes connecting to the database and ensuring that all the relevant schemas exist and the user has read/write permissions to the relevant database schemas.
+If, at any point, you manually edit the yaml configuration remember to call `validateCdmConfigFile` to test if the parameters are valid.
+
+
+# Executing the REWARD study
+The simplest way to execute REWARD is to use an Rstudio session with the following code.
+```{r eval = FALSE}
+#TODO
+
+```
+
+Alternatively, you can use the execute function from inside an r session
+
+```{r eval = FALSE}
+execute(cdmConfigPath, referenceZipFile, deleteExistingCohorts = deleteExistingCohorts)
+```
+
+# Uploading results
+First your CDM must be registered within the REWARD database.
+
+The results CSV files can then be shared with the OhdsiSharing package.
+```{r}
+# TODO
+```
+Once compiled, the post processing, analysis and viewing of results can be completed.

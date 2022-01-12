@@ -5,10 +5,6 @@ sourceId: 0
 database: MyCdmDatabaseName
 name: MyCdmFriendlyName
 
-# If a connection to a REWARD central instance can be established,
-# import data directly rather than waiting for full results to be generated
-performActiveDataTransfer: TRUE
-
 # Where results files are generated
 exportPath: "export"
 # Where reward references are unzipped and stored

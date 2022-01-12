@@ -19,10 +19,12 @@
 #' Loads config and prompt user for db password
 #' Password can be set in envrionment variable passwordEnvironmentVariable of yaml file
 #' @param cdmConfigPath                 path to cdm configuration file
+#' @param keyring                       keyring::keyring. For systems that support multiple keyrings, specify the name of the keyring to use here.
+#'                                      If NULL, then the default keyring is used.
 #' @importFrom keyring keyget
 #' @importFrom SqlRender snakeCaseToCamelCase
 #' @export
-loadCdmConfiguration <- function(cdmConfigPath) {
+loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
   checkmate::assertFileExists(cdmConfigPath)
   defaults <- list(
     useSecurePassword = FALSE,
@@ -46,7 +48,7 @@ loadCdmConfiguration <- function(cdmConfigPath) {
 
   if (config$useSecurePassword & !is.null(config$keyringService)) {
     ParallelLogger::logInfo("Using keyring service ", config$keyringService, "to set database passwrod for", config$connectionDetails$user)
-    config$connectionDetails$password <- keyring::key_get(config$keyringService, username = config$connectionDetails$user)
+    config$connectionDetails$password <- keyring::key_get(config$keyringService, username = config$connectionDetails$user, keyring = keyring)
   }
   config$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, config$connectionDetails)
 
@@ -76,7 +78,10 @@ loadCdmConfiguration <- function(cdmConfigPath) {
 #' @inheritParams validateCdmConfigFile
 #' @param overwrite                     Overwite existing file (if it exists)
 #' @export
-createCdmConfiguration <- function(cdmConfigPath, overwrite = FALSE, testConnection = TRUE) {
+createCdmConfiguration <- function(cdmConfigPath,
+                                   keyring = NULL,
+                                   overwrite = FALSE,
+                                   testConnection = TRUE) {
   # Copy default file
   defaultCdmPath <- system.file("yml", "default.cdm.yml", package = "RewardExecutionPackage")
 
@@ -100,12 +105,15 @@ createCdmConfiguration <- function(cdmConfigPath, overwrite = FALSE, testConnect
     }
 
     tryCatch({
-      keyring::key_get(cdmConfig$keyringService, username = user)
+      keyring::key_get(cdmConfig$keyringService, username = user, keyring = keyring)
       message("Password for", user, " with service ", cdmConfig$keyringService, " already exists. Use keyring::keyset to change")
     },
     error = function(...) {
       message("Set keyring password for cdm user ", user, " with service ", cdmConfig$keyringService)
-      keyring::key_set(cdmConfig$keyringService, username = user)
+      keyring::key_set(cdmConfig$keyringService,
+                       username = user,
+                       keyring = keyring,
+                       prompt = paste("Enter CDM database password for user", user))
     })
   }
 
@@ -116,10 +124,10 @@ createCdmConfiguration <- function(cdmConfigPath, overwrite = FALSE, testConnect
 #' @description
 #' Opens a file for editing that contains the default settings for a cdm
 #'
-#' @param cdmConfigPath                 path to store configuration file
+#' @inheritParams loadCdmConfiguration
 #' @param testConnection                Attempt to connect to database and write to schemas needed for writing?
 #' @export
-validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE) {
+validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring = NULL) {
   # Check required parameters exist
   requiredNames <- c("sourceId",
                      "database",
@@ -141,7 +149,7 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE) {
   }
 
   if (testConnection) {
-    cdmConfig <- loadCdmConfiguration(cdmConfigPath)
+    cdmConfig <- loadCdmConfiguration(cdmConfigPath, keyring = keyring)
     ParallelLogger::logInfo("Configuration loads, checking database connection")
     tryCatch({
       connection <- DatabaseConnector::connect(cdmConfig$connectionDetails)
