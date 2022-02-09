@@ -11,20 +11,20 @@ exportPath: "export"
 referencePath: "reference_files"
 
 # A DatabaseConnector connection details object
-# password can be set in plaintext or, more securely, via keyring service
+# password can be set in plaintext or more securely via keyring service
 connectionDetails:
   dbms: "postgresql"
   server: "localhost/reward"
   port: 5432
   # If username is unset it will be the system username
-  # Alternatively, set environment variable REWARD_CDM_USER
+  # Alternatively set environment variable REWARD_CDM_USER
   user: "postgres"
 
 # use keyring package for storing database credentials
 useSecurePassword: True
 keyringService: "reward_cdm"
 
-# Use DatabaseConnector bulk upload, where possible
+# Use DatabaseConnector bulk upload where possible
 # See DatabaseConnector documentation for more information
 bulkUpload: True
 
@@ -41,17 +41,16 @@ drugEraSchema: "reward"
 
 # Tables to be created and used by REWARD
 tables:
-  outcomeCohort: "outcome_cohort"
-  cohort: "exposure_cohort"
   sccResult: "scc_result"
+  cohort: "cohort"
+
   # Reference table definitions
+  referenceVersion: "reference_version"
   cohortDefinition: "cohort_definition"
-  outcomeCohortDefinition: "outcome_cohort_definition"
+  exposureCohort: "exposure_cohort"
+  outcomeCohort: "outcome_cohort"
+  cohortGroupDefinition: "cohort_group_definition"
+  cohortGroup: "cohort_group"
   conceptSetDefinition: "concept_set_definition"
-  atlasOutcomeReference: "atlas_outcome_reference"
-  atlasOutcomeConcept: "atlas_outcome_concept"
-  atlasExposureReference: "atlas_exposure_reference"
-  atlasExposureConcept: "atlas_exposure_concept"
-  customExposure: "custom_exposure"
-  customExposureConcept: "custom_exposure_concept"
-  analysisSetting: "analysis_setting"
+  atlasCohortReference: "atlas_cohort_reference"
+  cohortConceptSet: "cohort_concept_set"

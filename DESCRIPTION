@@ -2,7 +2,7 @@ Package: RewardExecutionPackage
 Type: Package
 Title: REWARD Execution Package
 Version: 0.1.0
-Author: James Gilbert
+Author: Jamie Gilbert
 Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
 Depends:
 	DatabaseConnector (>= 5.0.0),

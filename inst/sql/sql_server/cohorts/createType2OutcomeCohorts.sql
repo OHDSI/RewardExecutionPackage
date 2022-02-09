@@ -36,15 +36,15 @@ inner join
   and c1.concept_name not like '%of specific body structure%'
   and c1.domain_id = 'Condition'
 ) t1 on ca1.ancestor_concept_id = t1.concept_id
-inner join @reference_schema.@outcome_cohort_definition ocr ON (
-    ocr.conceptset_id = ca1.ancestor_concept_id and ocr.outcome_type = 2
+inner join @reference_schema.@outcome_cohort ocr ON (
+    ocr.referent_concept_id = ca1.ancestor_concept_id and ocr.outcome_type = 2
 )
 inner join #cohorts_to_compute coc ON coc.cohort_definition_id = ocr.cohort_definition_id
 
 ;
 
 --incident outcomes - requiring inpatient visit
-insert into @cohort_database_schema.@outcome_cohort_table
+insert into @cohort_database_schema.@cohort_table
 (
   cohort_definition_id
   , subject_id
@@ -69,8 +69,8 @@ from
     co1.person_id
     , ca1.ancestor_concept_id
 ) t1
-inner join @reference_schema.@outcome_cohort_definition ocr ON (
-    ocr.conceptset_id = t1.ancestor_concept_id AND ocr.outcome_type = 2
+inner join @reference_schema.@outcome_cohort ocr ON (
+    ocr.referent_concept_id = t1.ancestor_concept_id AND ocr.outcome_type = 2
 )
 inner join #cohorts_to_compute coc ON ocr.cohort_definition_id = coc.cohort_definition_id
 inner join

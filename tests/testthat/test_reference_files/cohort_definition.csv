@@ -1,4 +1,0 @@
-"COHORT_DEFINITION_ID","COHORT_DEFINITION_NAME","SHORT_NAME","DRUG_CONCEPTSET_ID","TARGET_COHORT","SUBGROUP_COHORT","ATC_FLG"
-1,"10-hydroxydecanoate","RxNorm - 10-hydroxydecanoate",43013229,0,0,0
-2,"Nitrofurantoin","RxNorm - Nitrofurantoin",920293,0,0,0
-13731,"[REWARD EXPOSURE] Influenza vaccine drug era (1 year + 6 mos Surveillance window)","[REWARD EXPOSURE] Influenza vaccine drug era (1 year + 6 mos Surveillance window)",99999999,0,0,-1

@@ -3,8 +3,10 @@ IF OBJECT_ID('tempdb..#computed_cohorts', 'U') IS NOT NULL
 
 --HINT DISTRIBUTE_ON_KEY(cohort_definition_id)
 CREATE TABLE #computed_cohorts AS
-SELECT DISTINCT cohort_definition_id
-FROM @cohort_database_schema.@cohort_table;
+SELECT DISTINCT ct.cohort_definition_id
+FROM @cohort_database_schema.@cohort_table ct
+INNER JOIN @reference_schema.@exposure_cohort_table et ON ct.cohort_definition_id = et.cohort_definition_id
+;
 
 -- First, create ingredient level cohorts
 --HINT DISTRIBUTE_ON_KEY(person_id)
@@ -24,7 +26,7 @@ from
         , de0.drug_era_start_date as cohort_start_date
         , de0.drug_era_end_date as cohort_end_date
         , row_number() over (partition by de0.person_id, ings.concept_id order by de0.drug_era_start_date asc) row_num
-  FROM @drug_era_schema.drug_era de0
+  FROM @cdm_database_schema.drug_era de0
   inner join
       (
         SELECT concept_id, concept_name
@@ -35,7 +37,8 @@ from
       on de0.drug_concept_id = ings.concept_id
       -- where de0.drug_concept_id in (42904205, 40226579, 1337068) -- REMOVE FOR FULL RUN
   ) de1
-inner join @reference_schema.@cohort_definition cr ON (cr.drug_conceptset_id = de1.drug_concept_id  AND cr.atc_flg = 0)
+INNER JOIN @reference_schema.@exposure_cohort_table et ON (et.referent_concept_id = de1.drug_concept_id  AND et.atc_flg = 0)
+INNER join @reference_schema.@cohort_definition cr ON cr.cohort_definition_id = et.cohort_definition_id
 left join #computed_cohorts cc ON cc.cohort_definition_id = cr.cohort_definition_id
 inner join @cdm_database_schema.observation_period op1
   on de1.person_id = op1.person_id
@@ -80,7 +83,7 @@ from
         , de0.drug_era_start_date as cohort_start_date
         , de0.drug_era_end_date as cohort_end_date
         , row_number() over (partition by de0.person_id, atc_rxnorm.atc_concept_id order by de0.drug_era_start_date asc) row_num
-  FROM @drug_era_schema.drug_era de0
+  FROM @cdm_database_schema.drug_era de0
   inner join
       (
         SELECT c1.concept_id as descendant_concept_id, c1.concept_name as descendant_concept_name, c2.concept_id as atc_concept_id, c2.concept_name as atc_concept_name, c2.vocabulary_id as atc_id
@@ -92,7 +95,8 @@ from
       on de0.drug_concept_id = atc_rxnorm.descendant_concept_id
     --  where de0.drug_concept_id in (42904205, 40226579, 1337068) -- REMOVE FOR FULL RUN
   ) de1
-inner join @reference_schema.@cohort_definition cr ON (cr.drug_conceptset_id = de1.drug_concept_id  AND cr.atc_flg = 1)
+INNER JOIN @reference_schema.@exposure_cohort_table et ON (et.referent_concept_id = de1.drug_concept_id  AND et.atc_flg = 1)
+INNER join @reference_schema.@cohort_definition cr ON cr.cohort_definition_id = et.cohort_definition_id
 left join #computed_cohorts cc ON cc.cohort_definition_id = cr.cohort_definition_id
 inner join @cdm_database_schema.observation_period op1
   on de1.person_id = op1.person_id

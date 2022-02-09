@@ -1,18 +1,10 @@
 cdmConfigPath <- "config/test.cdm.yml"
 cfg <- yaml::read_yaml(cdmConfigPath)
 unlink(cfg$connectionDetails$server)
-# Eunomia DB is stored relative to testing directory
-connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cfg$connectionDetails$server)
-connection <- DatabaseConnector::connect(connectionDetails)
-
-referenceZipPath <- tempfile(fileext = ".zip")
-makeTestReferenceZip(pathToZip = referenceZipPath)
+referenceZipPath <- file.path("test_reference_files", "reward-references.zip")
 
 withr::defer({
-  # Always disconnect
-  DatabaseConnector::disconnect(connection)
   # Clean up Eunomia instance
   unlink(cfg$connectionDetails$server)
-  unlink(referenceZipPath)
   unlink(cfg$exportFolder)
 }, testthat::teardown_env())

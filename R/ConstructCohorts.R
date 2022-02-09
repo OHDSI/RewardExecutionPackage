@@ -25,42 +25,31 @@
 #' @export
 createCohorts <- function(connection, config, deleteExisting = FALSE) {
   sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohortTable.sql",
-                                    package = packageName(),
-                                    dbms = connection@dbms,
-                                    cohort_database_schema = config$resultSchema,
-                                    cohort_table = config$tables$cohort,
-                                    delete_existing = deleteExisting)
+                                           package = utils::packageName(),
+                                           dbms = connection@dbms,
+                                           cohort_database_schema = config$resultSchema,
+                                           cohort_table = config$tables$cohort,
+                                           delete_existing = deleteExisting)
   DatabaseConnector::executeSql(connection, sql)
 
+  createExposureCohorts(connection, config)
+  createOutcomeCohorts(connection, config)
+  computeAtlasCohorts(connection, config)
+}
+
+createExposureCohorts <- function(connection, config) {
   sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohorts.sql",
-                                           package = packageName(),
+                                           package = utils::packageName(),
                                            dbms = connection@dbms,
                                            cdm_database_schema = config$cdmSchema,
                                            reference_schema = config$referenceSchema,
-                                           drug_era_schema = config$cdmSchema, # Use cdm drug eras
                                            cohort_database_schema = config$resultSchema,
                                            vocab_schema = config$vocabularySchema,
                                            cohort_table = config$tables$cohort,
+                                           exposure_cohort_table = config$tables$exposureCohort,
                                            cohort_definition = config$tables$cohortDefinition)
 
   DatabaseConnector::executeSql(connection, sql)
-
-  # Custom drug eras
-  if (!is.null(config$drugEraSchema)) {
-    sql <- SqlRender::loadRenderTranslateSql("cohorts/createCohorts.sql",
-                                             package = packageName(),
-                                             dbms = connection@dbms,
-                                             cdm_database_schema = config$cdmSchema,
-                                             reference_schema = config$referenceSchema,
-                                             drug_era_schema = config$drugEraSchema,
-                                             cohort_database_schema = config$resultSchema,
-                                             vocab_schema = config$vocabularySchema,
-                                             cohort_table = config$tables$cohort,
-                                             cohort_definition = config$tables$cohortDefinition)
-    DatabaseConnector::executeSql(connection, sql)
-  }
-
-  computeAtlasCohorts(connection, config, exposureCohorts = TRUE)
 }
 
 #' @title
@@ -71,17 +60,7 @@ createCohorts <- function(connection, config, deleteExisting = FALSE) {
 #' @param connection                    connection
 #' @param config                        cdmConfig
 #' @param exposureCohorts               get exposures or not
-getUncomputedAtlasCohorts <- function(connection, config, exposureCohorts = FALSE) {
-
-  if (exposureCohorts) {
-    cohortTable <- config$tables$cohort
-    referenceTable <- config$tables$atlasExposureReference
-    definitionsFile <- "atlas_exposure_reference.csv"
-  } else {
-    cohortTable <- config$tables$outcomeCohort
-    referenceTable <- config$tables$atlasOutcomeReference
-    definitionsFile <- "atlas_outcome_reference.csv"
-  }
+getUncomputedAtlasCohorts <- function(connection, config) {
 
   # Get only null atlas cohorts
   atlaSql <- "
@@ -98,29 +77,22 @@ getUncomputedAtlasCohorts <- function(connection, config, exposureCohorts = FALS
                                                              atlaSql,
                                                              reference_schema = config$referenceSchema,
                                                              result_schema = config$resultSchema,
-                                                             cohort_table = cohortTable,
-                                                             atlas_reference = referenceTable)
+                                                             cohort_table = config$tables$cohort,
+                                                             atlas_reference = config$tables$atlasCohortReference)
 
-  fullCohorts <- read.csv(file.path(config$referencePath, definitionsFile))
+  fullCohorts <- read.csv(file.path(config$referencePath, "atlas_cohort_reference.csv"))
   return(fullCohorts[fullCohorts$COHORT_DEFINITION_ID %in% atlasCohorts$COHORT_DEFINITION_ID,])
 }
 
-#' @title
-#' Create outcome cohorts
-#' @description
-#' Create outcome cohorts in the CDM - this function can take a very very long time
-#' Does not compute if results already exist in cohort tables
-#' @param connection                    DatabaseConnector connection to cdm
-#' @param config                        cdm configuration
-#' @param deleteExisting                remove existing data
-createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
+createOutcomeCohorts <- function(connection, config) {
   ParallelLogger::logInfo("Creating concept ancestor grouping and table")
   sql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "createOutcomeCohorts.sql", package = utils::packageName()))
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                sql = sql,
                                                cohort_database_schema = config$resultSchema,
-                                               outcome_cohort_table = config$tables$outcomeCohort,
-                                               delete_existing = deleteExisting)
+                                               reference_schema = config$referenceSchema,
+                                               outcome_cohort = config$tables$outcomeCohort,
+                                               cohort_table = config$tables$cohort)
 
   outcomeTypes <- list(
     type0 = list(
@@ -143,7 +115,9 @@ createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
     connection,
     computedCohortsSql,
     cohort_database_schema = config$resultSchema,
-    outcome_cohort_table = config$tables$outcomeCohort
+    reference_schema = config$referenceSchema,
+    outcome_cohort = config$tables$outcomeCohort,
+    cohort_table = config$tables$cohort
   )
 
   computeSql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "outcomeCohortsToCompute.sql", package = utils::packageName()))
@@ -152,7 +126,7 @@ createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
     DatabaseConnector::renderTranslateExecuteSql(connection,
                                                  computeSql,
                                                  reference_schema = config$referenceSchema,
-                                                 outcome_cohort_definition = config$tables$outcomeCohortDefinition,
+                                                 outcome_cohort_definition = config$tables$outcomeCohort,
                                                  outcome_type = oType)
     DatabaseConnector::renderTranslateQuerySql(connection,
                                                "SELECT count(*) as c_count FROM #cohorts_to_compute")$C_COUNT[[1]]
@@ -167,13 +141,11 @@ createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
                                                    reference_schema = config$referenceSchema,
                                                    cdm_database_schema = config$cdmSchema,
                                                    cohort_database_schema = config$resultSchema,
-                                                   outcome_cohort_table = config$tables$outcomeCohort,
-                                                   outcome_cohort_definition = config$tables$outcomeCohortDefinition)
+                                                   cohort_table = config$tables$cohort,
+                                                   outcome_cohort = config$tables$outcomeCohort)
       count <- cohortsToCompute(cohortType$type)
     }
   }
-
-  computeAtlasCohorts(connection, config)
 }
 
 #' @title
@@ -182,15 +154,8 @@ createOutcomeCohorts <- function(connection, config, deleteExisting = FALSE) {
 #' Computes sql cohorts against the CDM
 #' @param connection          DatabaseConnector connection to cdm
 #' @param config              cdmConfiguration object
-#' @param exposureCohorts     Exposure or outcome based cohorts?
-computeAtlasCohorts <- function(connection, config, exposureCohorts = FALSE) {
-  atlasCohorts <- getUncomputedAtlasCohorts(connection, config, exposureCohorts = exposureCohorts)
-  if (exposureCohorts) {
-    cohortTable <- config$tables$cohort
-  } else {
-    cohortTable <- config$tables$outcomeCohort
-  }
-
+computeAtlasCohorts <- function(connection, config) {
+  atlasCohorts <- getUncomputedAtlasCohorts(connection, config)
   if (nrow(atlasCohorts) > 0) {
     # Generate each cohort
     apply(atlasCohorts, 1, function(cohortReference) {
@@ -200,53 +165,8 @@ computeAtlasCohorts <- function(connection, config, exposureCohorts = FALSE) {
                                                    cdm_database_schema = config$cdmSchema,
                                                    vocabulary_database_schema = config$vocabularySchema,
                                                    target_database_schema = config$resultSchema,
-                                                   target_cohort_table = cohortTable,
+                                                   target_cohort_table = config$tables$cohort,
                                                    target_cohort_id = cohortReference["COHORT_DEFINITION_ID"])
     })
   }
-}
-
-#' @title
-#' Create custom drug eras
-
-
-#' @description
-#' create the custom drug eras, these are for drugs with nonstandard eras (e.g. where doeses aren't picked up by
-#' repeat perscriptions). Could be something like a vaccine where exposed time is non trivial.
-#' deprecated It is now best to use atlas cohort definitions, will be removed in future version
-#' @param connection                    DatabaseConnector connection
-#' @param config                        CdmConfig object
-#' @export
-#' @importFrom vroom vroom
-createCustomDrugEras <- function(connection, config) {
-  ParallelLogger::logInfo("Creating custom drug eras")
-  sql <- SqlRender::loadRenderTranslateSql("cohorts/customDrugEraTable.sql",
-                                           package = utils::packageName(),
-                                           dbms = connection@dbms,
-                                           cdm_database = config$cdmSchema,
-                                           drug_era_schema = config$drugEraSchema)
-  DatabaseConnector::executeSql(connection, sql = sql)
-  drugEras <- vroom::vroom(system.file("csv", "custom_drug_eras.csv", package = utils::packageName()))
-
-  if (file.exists(config$customDrugErasCsv)) {
-    drugEras <- rbind(drugEras, vroom::vroom(config$customDrugErasCsv))
-  }
-
-  ParallelLogger::logInfo("Inserting custom drug eras")
-  DatabaseConnector::insertTable(connection,
-                                 databaseSchema = config$drugEraSchema,
-                                 "drug_era_info",
-                                 drugEras,
-                                 dropTableIfExists = TRUE,
-                                 createTable = TRUE,
-                                 tempTable = FALSE)
-
-  ParallelLogger::logInfo("Computing custom drug eras")
-  sql <- SqlRender::loadRenderTranslateSql("cohorts/customDrugEra.sql",
-                                           package = utils::packageName(),
-                                           dbms = connection@dbms,
-                                           cdm_database = config$cdmSchema,
-                                           drug_era_schema = config$drugEraSchema)
-  DatabaseConnector::executeSql(connection, sql = sql)
-
 }

@@ -14,28 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CONST_META_FILE_NAME <- "rb-meta.json"
+CONST_META_FILE_NAME <- "reward-meta-info.json"
 
 CONST_REFERENCE_TABLES <- c(
-  "concept_set_definition",
-  "cohort_definition",
-  "outcome_cohort_definition",
-  "atlas_outcome_reference",
-  "atlas_outcome_concept",
-  "atlas_exposure_reference",
-  "atlas_exposure_concept",
-  "analysis_setting"
+  'cohort_definition',
+  'exposure_cohort',
+  'outcome_cohort',
+  'cohort_group_definition',
+  'cohort_group',
+  'concept_set_definition',
+  'atlas_cohort_reference',
+  'cohort_concept_set',
+  'analysis_setting',
+  'reference_version'
 )
 
 CONST_RESULTS_TABLES <- c(
-  "outcome_cohort",
   "cohort",
   "scc_result"
 )
 
 CONST_EXCLUDE_REF_COLS <- list(
-  "atlasOutcomeReference" = c("SQL_DEFINITION", "DEFINITION"),
-  "atlasExposureReference" = c("SQL_DEFINITION", "DEFINITION")
+  "atlasCohortReference" = c("SQL_DEFINITION", "DEFINITION")
 )
 
 
@@ -96,17 +96,16 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
 
   ParallelLogger::logInfo("Creating reference tables")
   sql <- SqlRender::loadRenderTranslateSql(
-    "create/referenceTables.sql",
+    file.path("create", "referenceSchema.sql"),
     package = packageName(),
     dbms = connection@dbms,
     schema = cdmConfig$referenceSchema,
     concept_set_definition = cdmConfig$tables$conceptSetDefinition,
+    cohort_concept_set = cdmConfig$tables$cohortConceptSet,
     cohort_definition = cdmConfig$tables$cohortDefinition,
-    outcome_cohort_definition = cdmConfig$tables$outcomeCohortDefinition,
-    atlas_outcome_reference = cdmConfig$tables$atlasOutcomeReference,
-    atlas_outcome_concept = cdmConfig$tables$atlasOutcomeConcept,
-    atlas_exposure_reference = cdmConfig$tables$atlasExposureReference,
-    atlas_exposure_concept = cdmConfig$tables$atlasExposureConcept,
+    atlas_cohort_reference = cdmConfig$tables$atlasCohortReference,
+    cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
+    cohort_group = cdmConfig$tables$cohortGroup,
     analysis_setting = cdmConfig$tables$analysisSetting
   )
   DatabaseConnector::executeSql(connection, sql)

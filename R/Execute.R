@@ -29,8 +29,6 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
   on.exit(DatabaseConnector::disconnect(connection))
 
   importReferenceTables(connection, config, referenceZipFile)
-  createCustomDrugEras(connection, config)
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
-  createOutcomeCohorts(connection, config, deleteExisting = deleteExistingCohorts)
   computeSccResults(connection, config)
 }

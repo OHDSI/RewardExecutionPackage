@@ -1,6 +1,0 @@
-"COHORT_DEFINITION_ID","COHORT_DEFINITION_NAME","SHORT_NAME","CONCEPTSET_ID","OUTCOME_TYPE"
-1,"Incident outcome of 0-5 mitoses per 10 HPF- first occurence of diagnosis which is observed in hospital in future","Incident outcome of 0-5 mitoses per 10 HPF- WITH INP",4240068,1
-2,"Incident outcome of Chronic sinusitis which is observed in hospital in future","Incident outcome of Chronic sinusitis WITH INP",28060,1
-3,"Incident outcome of Chronic sinusitis- first occurence of diagnosis with 2 diagnosis codes","Incident outcome of Chronic sinusitis TWO DX",28060,0
-4,"Incident outcome of Chronic sinusitis- first occurence of diagnosis","Incident outcome of Chronic sinusitis ONE DX",28060,2
-5,"Gastrointestinal hemorrhage referent concept prevalent cohort: First occurrence of referent concept + descendants","Gastrointestinal hemorrhage referent concept prevalent cohort: First occurrence of referent concept + descendants",99999999,3
