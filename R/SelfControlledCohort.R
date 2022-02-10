@@ -15,7 +15,8 @@
 # limitations under the License.
 
 #' Peform SCC from self controlled cohort package with rewardbs settings
-runScc <- function(config,
+runScc <- function(connection,
+                   config,
                    postProcessFunction,
                    postProcessArgs,
                    analysisSettings,
@@ -30,7 +31,7 @@ runScc <- function(config,
   if (is.null(outcomeIds)) {
     outcomeIds <- ""
   }
-  opts <- list(connectionDetails = config$connectionDetails,
+  opts <- list(connection = connection,
                cdmDatabaseSchema = config$cdmSchema,
                cdmVersion = 5,
                exposureIds = exposureIds,
@@ -44,6 +45,7 @@ runScc <- function(config,
                postProcessArgs = postProcessArgs,
                computeTarDistribution = TRUE)
   args <- c(analysisSettings, opts)
+
   do.call(SelfControlledCohort::runSelfControlledCohort, args)
   ParallelLogger::logInfo(paste("Completed SCC for", config$database))
 }
@@ -99,8 +101,6 @@ computeSccResults <- function(connection,
                                                                     analysis_ids = analysisIds,
                                                                     reference_schema = config$referenceSchema,
                                                                     analysis_setting = config$tables$analysisSetting)
-
-  browser()
   apply(sccAnalysisSettings, 1, function(analysis) {
     analysisId <- analysis[["ANALYSIS_ID"]]
     if (!dir.exists(config$exportPath)) {
@@ -111,6 +111,7 @@ computeSccResults <- function(connection,
       if (nrow(dataBatch) > 0) {
         dataBatch <- cleanUpSccDf(dataBatch, config$sourceId, analysisId)
         dataFileName <- file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv"))
+        ParallelLogger::logInfo("Saving results ", dataFileName, " position ", position)
         vroom::vroom_write(dataBatch, dataFileName, delim = ",", na = "", append = position != 1)
       }
       return(dataBatch)
@@ -120,7 +121,8 @@ computeSccResults <- function(connection,
 
     ParallelLogger::logInfo(paste("Generating scc results with setting id", analysisId))
     analysisSettings <- RJSONIO::fromJSON(rawToChar(base64enc::base64decode(analysis["OPTIONS"])))
-    runScc(config = config,
+    runScc(connection = connection,
+           config = config,
            postProcessFunction = postProcessFunction,
            postProcessArgs = postProcessArgs,
            analysisSettings = analysisSettings,
