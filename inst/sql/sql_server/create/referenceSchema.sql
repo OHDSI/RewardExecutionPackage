@@ -143,7 +143,7 @@ create table @schema.@cohort_concept_set
 );
 
 CREATE TABLE @schema.@analysis_setting (
-    analysis_id {@include_constraints != ''} ? {SERIAL PRIMARY KEY} : {INT},
+    analysis_id INT {@include_constraints != ''} ? {PRIMARY KEY},
     type_id VARCHAR(5),
     analysis_name VARCHAR(255),
     description TEXT,

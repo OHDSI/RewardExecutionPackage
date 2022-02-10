@@ -38,7 +38,7 @@ runScc <- function(config,
                exposureDatabaseSchema = config$resultSchema,
                exposureTable = config$tables$cohort,
                outcomeDatabaseSchema = config$resultSchema,
-               outcomeTable = config$tables$outcomeCohort,
+               outcomeTable = config$tables$cohort,
                computeThreads = cores,
                postProcessFunction = postProcessFunction,
                postProcessArgs = postProcessArgs,
@@ -100,6 +100,7 @@ computeSccResults <- function(connection,
                                                                     reference_schema = config$referenceSchema,
                                                                     analysis_setting = config$tables$analysisSetting)
 
+  browser()
   apply(sccAnalysisSettings, 1, function(analysis) {
     analysisId <- analysis[["ANALYSIS_ID"]]
     if (!dir.exists(config$exportPath)) {
@@ -116,7 +117,6 @@ computeSccResults <- function(connection,
     }
 
     postProcessArgs <- list(config = config, analysisId = analysisId)
-
 
     ParallelLogger::logInfo(paste("Generating scc results with setting id", analysisId))
     analysisSettings <- RJSONIO::fromJSON(rawToChar(base64enc::base64decode(analysis["OPTIONS"])))

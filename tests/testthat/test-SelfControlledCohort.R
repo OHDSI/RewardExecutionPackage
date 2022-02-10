@@ -6,7 +6,7 @@ test_that("SelfControlledCohort works", {
   importReferenceTables(connection, cdmConfig, referenceZipPath)
   createCohorts(connection, cdmConfig)
   computeSccResults(connection, cdmConfig)
-
+  browser()
   checkmate::expect_file_exists(file.path(cdmConfig$exportPath, paste0("scc-results-", cdmConfig$database, "-aid-1.csv")))
   checkmate::expect_file_exists(file.path(cdmConfig$exportPath, paste0("scc-results-", cdmConfig$database, "-aid-2.csv")))
   checkmate::expect_file_exists(file.path(cdmConfig$exportPath, paste0("scc-results-", cdmConfig$database, "-aid-3.csv")))
