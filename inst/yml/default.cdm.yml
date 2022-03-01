@@ -43,6 +43,7 @@ drugEraSchema: "reward"
 tables:
   sccResult: "scc_result"
   cohort: "cohort"
+  sccRiskWindows: "scc_risk_windows"
 
   # Reference table definitions
   referenceVersion: "reference_version"
