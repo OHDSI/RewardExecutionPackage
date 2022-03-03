@@ -6,5 +6,5 @@ referenceZipPath <- file.path("test_reference_files", "reward-references.zip")
 withr::defer({
   # Clean up Eunomia instance
   unlink(cfg$connectionDetails$server)
-  unlink(cfg$exportFolder)
+  unlink("export", recursive = TRUE, force = TRUE)
 }, testthat::teardown_env())
