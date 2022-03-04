@@ -84,7 +84,7 @@ runScc <- function(connection,
   for (statType in statTypes) {
     data <- tarStats[[statType]]
     if (nrow(data) > 0) {
-      dataFileName <- file.path(config$exportPath, paste0(statType, config$database, "-aid-", analysisId, ".csv"))
+      dataFileName <- file.path(config$exportPath, paste0(statType, "-", config$database, "-aid-", analysisId, ".csv"))
       data$analysis_id <- as.integer(analysisId)
       data$source_id <- config$sourceId
       data <- data %>%
