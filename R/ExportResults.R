@@ -19,17 +19,16 @@
 #' Zips files and records their checksums
 #' @param config                    CdmConfiguration object
 #' @param exportZipFile             Name of zip file to export
-#' @importFrom jsonlite toJson
+#' @importFrom RJSONIO toJSON
 #' @importFrom tools md5sum
 #' @export
 exportResults <- function(config,
                           exportZipFile = paste0("reward-results-", config$database, ".zip")) {
   # Get scc files
   files <- list.files(config$exportPath, pattern = ".*\\.csv$")
-  fileHashes <- tools::md5sum(files)
-
+  fileHashes <- tools::md5sum(file.path(config$exportPath, files))
   names(fileHashes) <- basename(names(fileHashes))
-  jsonStr <- jsonlite::toJSON(fileHashes)
+  jsonStr <- RJSONIO::toJSON(fileHashes)
   writeLines(jsonStr, file.path(config$exportPath, "meta-info.json"))
   files <- c(files, "meta-info.json")
 

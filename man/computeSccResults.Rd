@@ -8,8 +8,8 @@ computeSccResults(
   connection,
   config,
   analysisIds = NULL,
-  outcomeCohortIds = NULL,
-  targetCohortIds = NULL
+  outcomeCohortIds = getDefaultOutcomeIds(connection, config),
+  targetCohortIds = getDefaultExposureIds(connection, config)
 )
 }
 \arguments{

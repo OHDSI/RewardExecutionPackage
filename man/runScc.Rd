@@ -5,12 +5,14 @@
 \title{Peform SCC from self controlled cohort package with rewardbs settings}
 \usage{
 runScc(
+  connection,
   config,
   postProcessFunction,
   postProcessArgs,
   analysisSettings,
-  exposureIds = NULL,
-  outcomeIds = NULL,
+  analysisId,
+  exposureIds,
+  outcomeIds,
   cores = parallel::detectCores() - 1
 )
 }

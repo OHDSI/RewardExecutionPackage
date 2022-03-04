@@ -4,7 +4,7 @@
 \alias{getUncomputedAtlasCohorts}
 \title{get Uncomputed Atlas Cohorts}
 \usage{
-getUncomputedAtlasCohorts(connection, config, exposureCohorts = FALSE)
+getUncomputedAtlasCohorts(connection, config)
 }
 \arguments{
 \item{connection}{connection}

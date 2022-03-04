@@ -50,7 +50,7 @@ CONST_EXCLUDE_REF_COLS <- list(
 #'
 #' @import ParallelLogger
 #' @importFrom utils unzip
-#' @importFrom jsonlite read_json
+#' @importFrom RJSONIO readJSONStream
 #' @importFrom tools md5sum file_path_as_absolute
 unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   ParallelLogger::logInfo("Inflating zip archive")
@@ -64,7 +64,7 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   # Perform checksum verifications
   metaFilePath <- file.path(unzipPath, CONST_META_FILE_NAME)
   checkmate::assert_file_exists(metaFilePath)
-  meta <- jsonlite::read_json(file.path(unzipPath, CONST_META_FILE_NAME))
+  meta <- RJSONIO::readJSONStream(file.path(unzipPath, CONST_META_FILE_NAME))
 
   ParallelLogger::logInfo(paste("Verifying file checksums"))
   # Check files are valid

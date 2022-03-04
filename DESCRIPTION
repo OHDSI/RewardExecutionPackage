@@ -8,7 +8,7 @@ Depends:
 	DatabaseConnector (>= 5.0.0),
 	R (>= 4.0.0)
 Imports:
-    jsonlite,
+    RJSONIO,
     ParallelLogger,
     SqlRender,
     yaml,

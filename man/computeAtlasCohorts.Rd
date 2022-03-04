@@ -4,14 +4,12 @@
 \alias{computeAtlasCohorts}
 \title{Compute Atlas cohorts}
 \usage{
-computeAtlasCohorts(connection, config, exposureCohorts = FALSE)
+computeAtlasCohorts(connection, config)
 }
 \arguments{
 \item{connection}{DatabaseConnector connection to cdm}
 
 \item{config}{cdmConfiguration object}
-
-\item{exposureCohorts}{Exposure or outcome based cohorts?}
 }
 \description{
 Computes sql cohorts against the CDM
