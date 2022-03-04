@@ -21,7 +21,7 @@
 #' @param cdmConfigPath                 path to cdm configuration file
 #' @param keyring                       keyring::keyring. For systems that support multiple keyrings, specify the name of the keyring to use here.
 #'                                      If NULL, then the default keyring is used.
-#' @importFrom keyring keyget
+#' @importFrom keyring key_get
 #' @importFrom SqlRender snakeCaseToCamelCase
 #' @export
 loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
