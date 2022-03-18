@@ -6,3 +6,4 @@
 /.idea/
 *errorReportSql.txt
 /tests/testthat/reference_files/
+/_targets/

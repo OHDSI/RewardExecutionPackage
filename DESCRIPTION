@@ -22,7 +22,8 @@ Suggests:
     testthat,
     withr,
     Eunomia,
-    R.utils
+    R.utils,
+    targets
 Remotes:
     OHDSI/SelfControlledCohort,
     OHDSI/Eunomia
