@@ -85,7 +85,7 @@ getUncomputedAtlasCohorts <- function(connection, config) {
 }
 
 createOutcomeCohorts <- function(connection, config) {
-  ParallelLogger::logInfo("Creating concept ancestor grouping and table")
+  message("Creating concept ancestor grouping and table")
   sql <- SqlRender::readSql(system.file("sql/sql_server/cohorts", "createOutcomeCohorts.sql", package = utils::packageName()))
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                sql = sql,
@@ -135,7 +135,7 @@ createOutcomeCohorts <- function(connection, config) {
   for (cohortType in outcomeTypes) {
     count <- cohortsToCompute(cohortType$type)
     while (count) {
-      ParallelLogger::logInfo(count, " Uncomputed cohorts of type", cohortType$type)
+      message(count, " Uncomputed cohorts of type", cohortType$type)
       DatabaseConnector::renderTranslateExecuteSql(connection,
                                                    sql = cohortType$sql,
                                                    reference_schema = config$referenceSchema,
@@ -159,7 +159,7 @@ computeAtlasCohorts <- function(connection, config) {
   if (nrow(atlasCohorts) > 0) {
     # Generate each cohort
     apply(atlasCohorts, 1, function(cohortReference) {
-      ParallelLogger::logInfo("computing custom cohort: ", cohortReference["COHORT_DEFINITION_ID"])
+      message("computing custom cohort: ", cohortReference["COHORT_DEFINITION_ID"])
       DatabaseConnector::renderTranslateExecuteSql(connection,
                                                    sql = rawToChar(base64enc::base64decode(cohortReference["SQL_DEFINITION"])),
                                                    cdm_database_schema = config$cdmSchema,

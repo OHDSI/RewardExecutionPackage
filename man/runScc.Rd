@@ -10,7 +10,6 @@ runScc(
   postProcessFunction,
   postProcessArgs,
   analysisSettings,
-  analysisId,
   exposureIds,
   outcomeIds,
   cores = parallel::detectCores() - 1

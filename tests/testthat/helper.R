@@ -8,6 +8,6 @@ if (Sys.getenv("DEVTOOLS_LOAD") == "true" & .Platform$OS.type == "unix") {
   if (!file.exists(linkPath)) {
     R.utils::createLink(link = linkPath, system.file("sql", package = "RewardExecutionPackage"))
     options("use.devtools.sql_shim" = TRUE)
-    #withr::defer(unlink(file.path(packageRoot, "sql")), testthat::teardown_env())
+    withr::defer(unlink(file.path(packageRoot, "sql")), testthat::teardown_env())
   }
 }

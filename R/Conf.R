@@ -47,18 +47,17 @@ loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
   }
 
   if (config$useSecurePassword & !is.null(config$keyringService)) {
-    ParallelLogger::logInfo("Using keyring service ", config$keyringService, "to set database passwrod for", config$connectionDetails$user)
+    message("Using keyring service ", config$keyringService, "to set database passwrod for", config$connectionDetails$user)
     config$connectionDetails$password <- keyring::key_get(config$keyringService, username = config$connectionDetails$user, keyring = keyring)
   }
   config$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, config$connectionDetails)
 
   if (!is.null(config$sqlRenderTempEmulationSchema)) {
-    ParallelLogger::logInfo("Setting temp emulation schema to ", config$sqlRenderTempEmulationSchema)
+    message("Setting temp emulation schema to ", config$sqlRenderTempEmulationSchema)
     options("sqlRenderTempEmulationSchema" = config$sqlRenderTempEmulationSchema)
   }
 
   class(config) <- "CdmConfig"
-
   return(config)
 }
 
@@ -86,15 +85,15 @@ createCdmConfiguration <- function(cdmConfigPath,
   defaultCdmPath <- system.file("yml", "default.cdm.yml", package = "RewardExecutionPackage")
 
   if (!base::file.exists(cdmConfigPath) | overwrite) {
-    ParallelLogger::logInfo("Creating new configuration file")
+    message("Creating new configuration file")
     base::file.copy(defaultCdmPath, cdmConfigPath)
   } else {
-    ParallelLogger::logInfo("Editing existing file")
+    message("Editing existing file")
   }
 
   utils::file.edit(cdmConfigPath)
   cdmConfig <- yaml::read_yaml(cdmConfigPath)
-  if (!is.null(cdmConfig$useSecurePassword)) {
+  if (!is.null(cdmConfig$useSecurePassword) & cdmConfig$useSecurePassword) {
     if (is.null(cdmConfig$keyringService)) {
       stop("keyringService parameter must be set when using keyring")
     }
@@ -141,7 +140,7 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
   checkmate::assertFileExists(cdmConfigPath)
   cdmConfig <- yaml::read_yaml(cdmConfigPath)
   checkmate::assertNames(names(cdmConfig), must.include = requiredNames)
-  ParallelLogger::logInfo("Required names are present.")
+  message("Required names are present.")
 
   if (isTRUE(cdmConfig$drugEraSchema == cdmConfig$cdmSchema)) {
     stop("drugEraSchema and cdmSchema cannot be the same.
@@ -150,37 +149,34 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
 
   if (testConnection) {
     cdmConfig <- loadCdmConfiguration(cdmConfigPath, keyring = keyring)
-    ParallelLogger::logInfo("Configuration loads, checking database connection")
+    message("Configuration loads, checking database connection")
     tryCatch({
       connection <- DatabaseConnector::connect(cdmConfig$connectionDetails)
     }, error = function(msg) {
       stop(paste("Error with connection details could not connect to database"))
-      ParallelLogger::logError(msg)
     })
     on.exit(DatabaseConnector::disconnect(connection))
 
     # Test schemas exists
-    ParallelLogger::logInfo("Checking CDM schema")
+    message("Checking CDM schema")
     tryCatch({
       DatabaseConnector::renderTranslateQuerySql(connection,
                                                  "SELECT * FROM @cdm_schema.cdm_source",
                                                  cdm_schema = cdmConfig$cdmSchema)
     }, error = function(msg) {
-      ParallelLogger::logError(msg)
       stop("Invalid CDM schema ", cdmConfig$cdmSchema)
     })
 
-    ParallelLogger::logInfo("Checking vocabulary schema")
+    message("Checking vocabulary schema")
     tryCatch({
       DatabaseConnector::renderTranslateQuerySql(connection,
                                                  "SELECT * FROM @vocabulary_schema.vocabulary",
                                                  vocabulary_schema = cdmConfig$vocabularySchema)
     }, error = function(msg) {
-      ParallelLogger::logError(msg)
       stop("Invalid vocabulary schema ", cdmConfig$vocabularySchema)
     })
 
-    ParallelLogger::logInfo("Checking results schemas")
+    message("Checking results schemas")
     # Test schemas exists and are writable
     testSql <- "
     CREATE TABLE @schema.@test_table_name (id INTEGER);
@@ -197,13 +193,12 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
                                                        test_table_name = tableName,
                                                        schema = schema)
         }, error = function(msg) {
-          ParallelLogger::logError(msg)
           stop("Invalid schema: ", schema, " cannot write table")
         })
       }
     }
-    ParallelLogger::logInfo("Database configuration appears valid")
+    message("Database configuration appears valid")
   }
 
-   ParallelLogger::logInfo("Configuration appears valid")
+   message("Configuration appears valid")
 }

@@ -41,10 +41,5 @@ test_that("Cohort construction works", {
 
   expect_true(count$CT[1] > 0)
   computeSccResults(connection, cdmConfig)
-
-  exportZipFilePath <- "exportTest.zip"
-  on.exit(unlink(exportZipFilePath), add = TRUE)
-  exportResults(cdmConfig, exportZipFile = exportZipFilePath)
-  expect_true(file.exists(file.path(cdmConfig$exportPath, exportZipFilePath)))
   unlink("export", recursive = TRUE, force = TRUE)
 })

@@ -53,7 +53,7 @@ CONST_EXCLUDE_REF_COLS <- list(
 #' @importFrom RJSONIO readJSONStream
 #' @importFrom tools md5sum file_path_as_absolute
 unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
-  ParallelLogger::logInfo("Inflating zip archive")
+  message("Inflating zip archive")
   if (!dir.exists(unzipPath)) {
     dir.create(unzipPath)
   } else if (!overwrite) {
@@ -66,16 +66,16 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   checkmate::assert_file_exists(metaFilePath)
   meta <- RJSONIO::readJSONStream(file.path(unzipPath, CONST_META_FILE_NAME))
 
-  ParallelLogger::logInfo(paste("Verifying file checksums"))
+  message(paste("Verifying file checksums"))
   # Check files are valid
 
   for (file in names(meta$hashList)) {
     hash <- meta$hashList[[file]]
-    ParallelLogger::logInfo(paste("checking file hash", file, hash))
+    message(paste("checking file hash", file, hash))
     unzipFile <- file.path(unzipPath, file)
     checkmate::assert_file_exists(unzipFile)
     verifyCheckSum <- tools::md5sum(unzipFile)[[1]]
-    ParallelLogger::logInfo(paste(hash, verifyCheckSum))
+    message(paste(hash, verifyCheckSum))
     checkmate::assert_true(hash == verifyCheckSum)
   }
 
@@ -94,7 +94,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
   checkmate::assertFileExists(zipFilePath)
   unzipAndVerify(zipFilePath, cdmConfig$referencePath, TRUE)
 
-  ParallelLogger::logInfo("Creating reference tables")
+  message("Creating reference tables")
   sql <- SqlRender::loadRenderTranslateSql(
     file.path("create", "referenceSchema.sql"),
     package = packageName(),
@@ -116,14 +116,13 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
     camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
     tableName <- cdmConfig$tables[[camelName]]
 
-    ParallelLogger::logInfo("Inserting reference table ", tableName)
-    ParallelLogger::logDebug(paste("Using insert table", camelName, tableName, file))
+    message("Inserting reference table ", tableName)
+    message(paste("Using insert table", camelName, tableName, file))
     data <- read.csv(file)
 
     # Remove columns we don't want to store on the CDM (big text strings aren't friendly with redshift)
     if (camelName %in% names(CONST_EXCLUDE_REF_COLS)) {
       data <- data[, !(names(data) %in% CONST_EXCLUDE_REF_COLS[[camelName]])]
-      ParallelLogger::logDebug(names(data))
     }
 
     DatabaseConnector::insertTable(
