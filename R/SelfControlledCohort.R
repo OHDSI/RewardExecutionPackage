@@ -124,6 +124,8 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                     "p_25" = "p25",
                     "p_75" = "p75",
                     "p_90" = "p90",
+                    "maximum" = "max",
+                    "minimum" = "min",
                     "stat_type" = "statType")
     vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = append)
     append <- TRUE
