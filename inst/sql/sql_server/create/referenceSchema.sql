@@ -8,7 +8,7 @@
 {DEFAULT @atlas_cohort_reference = 'atlas_cohort_reference'}
 {DEFAULT @cohort_concept_set = 'cohort_concept_set'}
 {DEFAULT @analysis_setting = 'analysis_setting'}
-{DEFAULT @include_constraints = ''}
+{DEFAULT @include_constraints = FALSE}
 {DEFAULT @reference_version = 'reference_version'}
 
 DROP TABLE IF EXISTS @schema.@reference_version;
@@ -25,7 +25,7 @@ create table @schema.@cohort_definition
 	cohort_definition_name varchar(1000),
 	short_name varchar(1000),
 	concept_set_id bigint
-	{@include_constraints != ''} ? {
+	{@include_constraints} ? {
     ,
     CONSTRAINT cohort_conceptset_fk
       FOREIGN KEY(concept_set_id)
@@ -37,10 +37,10 @@ create table @schema.@cohort_definition
 /* Exposure cohort table*/
 DROP TABLE IF EXISTS @schema.@exposure_cohort;
 create table @schema.@exposure_cohort (
-    cohort_definition_id {@include_constraints != ''} ? {bigint PRIMARY KEY} : {bigint},
+    cohort_definition_id {@include_constraints} ? {bigint PRIMARY KEY} : {bigint},
 	referent_concept_id bigint,
 	atc_flg int
-	{@include_constraints != ''} ? {
+	{@include_constraints} ? {
     ,
     CONSTRAINT exp_cohort_def_fk
       FOREIGN KEY(COHORT_DEFINITION_ID)
@@ -52,10 +52,10 @@ create table @schema.@exposure_cohort (
 /* Outcome cohort table */
 DROP TABLE IF EXISTS @schema.@outcome_cohort;
 create table @schema.@outcome_cohort (
-    cohort_definition_id {@include_constraints != ''} ? {bigint PRIMARY KEY} : {bigint},
+    cohort_definition_id {@include_constraints} ? {bigint PRIMARY KEY} : {bigint},
 	referent_concept_id bigint,
 	outcome_type int
-	{@include_constraints != ''} ? {
+	{@include_constraints} ? {
     ,
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(cohort_definition_id)
@@ -67,10 +67,10 @@ create table @schema.@outcome_cohort (
 /* arbitrarily group cohorts together by group */
 DROP TABLE IF EXISTS @schema.@cohort_group_definition;
 create table @schema.@cohort_group_definition (
-    cohort_group_definition_id {@include_constraints != ''} ? {int PRIMARY KEY} : {int},
+    cohort_group_definition_id {@include_constraints} ? {int PRIMARY KEY} : {int},
     cohort_group_parent_id INT,
     group_name varchar(1000)
-    {@include_constraints != ''} ? {
+    {@include_constraints} ? {
     ,
      CONSTRAINT cohort_def_cohort_group_fk
       FOREIGN KEY(cohort_group_parent_id)
@@ -84,7 +84,7 @@ create table @schema.@cohort_group (
     cohort_definition_id BIGINT,
     cohort_group_definition_id INT,
     levels_of_separation INT DEFAULT 0
-    {@include_constraints != ''} ? {
+    {@include_constraints} ? {
     ,
     CONSTRAINT cohort_group_cohort_definition_fk
       FOREIGN KEY(cohort_definition_id)
@@ -105,7 +105,7 @@ create table @schema.@concept_set_definition
     cohort_definition_id bigint,
 	concept_set_id BIGINT,
 	concept_set_name varchar(1000)
-	{@include_constraints != ''} ? {
+	{@include_constraints} ? {
     ,
     CONSTRAINT cohort_concept_def_fk
       FOREIGN KEY(cohort_definition_id)
@@ -116,12 +116,12 @@ create table @schema.@concept_set_definition
 
 DROP TABLE IF EXISTS @schema.@atlas_cohort_reference;
 CREATE TABLE @schema.@atlas_cohort_reference (
-    cohort_definition_id {@include_constraints != ''} ? {int PRIMARY KEY} : {int},
+    cohort_definition_id {@include_constraints} ? {int PRIMARY KEY} : {int},
     ATLAS_ID BIGINT,
     sql_definition  varchar(max),
     DEFINITION  varchar(max),
     atlas_url varchar(1000) -- Base atlas url used to pull cohort
-    {@include_constraints != ''} ? {
+    {@include_constraints} ? {
     ,
     CONSTRAINT cohort_def
       FOREIGN KEY(COHORT_DEFINITION_ID)
@@ -142,7 +142,7 @@ create table @schema.@cohort_concept_set
 	is_excluded INT,
 	include_descendants INT,
 	include_mapped INT
-	{@include_constraints != ''} ? {
+	{@include_constraints} ? {
     ,
     CONSTRAINT cohort_def
       FOREIGN KEY(COHORT_DEFINITION_ID)
@@ -153,7 +153,7 @@ create table @schema.@cohort_concept_set
 
 DROP TABLE IF EXISTS @schema.@analysis_setting;
 CREATE TABLE @schema.@analysis_setting (
-    analysis_id INT {@include_constraints != ''} ? {PRIMARY KEY},
+    analysis_id INT {@include_constraints} ? {PRIMARY KEY},
     type_id VARCHAR(5),
     analysis_name VARCHAR(255),
     description TEXT,

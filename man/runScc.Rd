@@ -7,14 +7,15 @@
 runScc(
   connection,
   config,
-  postProcessFunction,
-  postProcessArgs,
   analysisSettings,
-  exposureIds,
-  outcomeIds,
+  analysisId,
+  postProcessFunction = batchStoreSccResults,
+  postProcessArgs = list(config = config, analysisId = analysisId),
+  exposureIds = getDefaultExposureIds(connection, config),
+  outcomeIds = getDefaultOutcomeIds(connection, config),
   cores = parallel::detectCores() - 1
 )
 }
 \description{
-Peform SCC from self controlled cohort package with rewardbs settings
+Used by targets for execution of steps. See computeSccResults for other settings
 }

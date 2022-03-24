@@ -58,6 +58,8 @@ getSccRiskWindowStats <- function(connection,
                                   analysisId,
                                   exposureIds = getDefaultExposureIds(connection, config),
                                   outcomeIds = getDefaultOutcomeIds(connection, config)) {
+
+
   message(paste("Creating SCC risk windows on database ", config$database))
   SelfControlledCohort::runSccRiskWindows(connection,
                                           cdmDatabaseSchema = config$cdmSchema,
@@ -100,12 +102,21 @@ getSccRiskWindowStats <- function(connection,
 #' @param config cdm configuration  object
 #' @param analysisId id to mark output files with
 #' @export
-exportSccTarStats <- function(tarStats, statType, config, analysisId) {
-  data <- tarStats[[statType]]
-  if (nrow(data) > 0) {
-    dataFileName <- file.path(config$exportPath, paste0(statType, "-", config$database, "-aid-", analysisId, ".csv"))
-    data$analysis_id <- as.integer(analysisId)
-    data$source_id <- config$sourceId
+exportSccTarStats <- function(tarStats, config, analysisId) {
+  append <- FALSE
+  statTypes <- c("treatmentTimeDistribution",
+                 "timeToOutcomeDistribution",
+                 "timeToOutcomeDistributionExposed",
+                 "timeToOutcomeDistributionUnexposed")
+
+  dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId, ".csv"))
+  for (statType in statTypes) {
+    data <- tarStats[[statType]]
+    if (nrow(data) > 0) {
+      data$analysis_id <- as.integer(analysisId)
+      data$source_id <- config$sourceId
+      message("Empty TAR stat data for analysis, ", analysisId)
+    }
     data <- data %>%
       dplyr::rename("target_cohort_id" = "exposureId",
                     "outcome_cohort_id" = "outcomeId",
@@ -114,20 +125,48 @@ exportSccTarStats <- function(tarStats, statType, config, analysisId) {
                     "p_75" = "p75",
                     "p_90" = "p90",
                     "stat_type" = "statType")
-    vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = FALSE)
-    return(dataFileName)
+    vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = append)
+    append <- TRUE
+
   }
-  return(NULL)
+  return(dataFileName)
 }
 
+#' Get default results file name
+#' @export
+getDefaultSccDataFileName <- function(config, analysisId) {
+  file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv"))
+}
+
+# Export analysis results to a csv file in batches (assumes the data set is large)
+batchStoreSccResults <- function(dataBatch,
+                                 position,
+                                 config,
+                                 analysisId,
+                                 dataFileName = getDefaultSccDataFileName(config, analysisId)) {
+  if (nrow(dataBatch) == 0) {
+    return(dataBatch)
+  }
+  dataBatch <- cleanUpSccDf(dataBatch, config$sourceId, analysisId)
+
+  message("Saving results ", dataFileName, " position ", position)
+  vroom::vroom_write(dataBatch, dataFileName, delim = ",", na = "", append = position != 1)
+  return(dataBatch)
+}
+
+
 #' Peform SCC from self controlled cohort package with rewardbs settings
+#' @description
+#' Used by targets for execution of steps. See computeSccResults for other settings
+#' @export
 runScc <- function(connection,
                    config,
-                   postProcessFunction,
-                   postProcessArgs,
                    analysisSettings,
-                   exposureIds,
-                   outcomeIds,
+                   analysisId,
+                   postProcessFunction = batchStoreSccResults,
+                   postProcessArgs = list(config = config, analysisId = analysisId),
+                   exposureIds = getDefaultExposureIds(connection, config),
+                   outcomeIds = getDefaultOutcomeIds(connection, config),
                    cores = parallel::detectCores() - 1) {
   message(paste("Starting SCC analysis on", config$database))
   opts <- list(connection = connection,
@@ -150,6 +189,7 @@ runScc <- function(connection,
   args <- c(analysisSettings, opts)
   do.call(SelfControlledCohort::runSelfControlledCohort, args)
   message(paste("Completed SCC for", config$database))
+  return(getDefaultSccDataFileName(config, analysisId))
 }
 
 cleanUpSccDf <- function(data, sourceId, analysisId) {
@@ -186,28 +226,16 @@ getSccSettings <- function(connection, config, analysisIds = NULL) {
   # Get all SCC analysis settings objects
   getSccSettingsSql <- "SELECT * FROM @reference_schema.@analysis_setting WHERE type_id = 'scc'
   {@analysis_ids != ''} ? {AND analysis_id IN (@analysis_ids)}"
-  DatabaseConnector::renderTranslateQuerySql(connection,
-                                             getSccSettingsSql,
-                                             analysis_ids = analysisIds,
-                                             reference_schema = config$referenceSchema,
-                                             analysis_setting = config$tables$analysisSetting)
-}
+  settings <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                         getSccSettingsSql,
+                                                         analysis_ids = analysisIds,
+                                                         reference_schema = config$referenceSchema,
+                                                         analysis_setting = config$tables$analysisSetting,
+                                                         snakeCaseToCamelCase = TRUE)
 
-
-# Export analysis results to a csv file in batches (assumes the data set is large)
-batchStoreSccResults <- function(dataBatch,
-                                 position,
-                                 config,
-                                 analysisId,
-                                 dataFileName = file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv"))) {
-  if (nrow(dataBatch) == 0) {
-    return(dataBatch)
-  }
-  dataBatch <- cleanUpSccDf(dataBatch, config$sourceId, analysisId)
-
-  message("Saving results ", dataFileName, " position ", position)
-  vroom::vroom_write(dataBatch, dataFileName, delim = ",", na = "", append = position != 1)
-  return(dataBatch)
+  # Convert Base 64 to json
+  settings$options <- lapply(settings$options, function(x) { RJSONIO::fromJSON(rawToChar(base64enc::base64decode(x))) })
+  settings
 }
 
 #' @title
@@ -233,21 +261,19 @@ computeSccResults <- function(connection,
   sccAnalysisSettings <- getSccSettings(connection, config, analysisIds = analysisIds)
 
   apply(sccAnalysisSettings, 1, function(analysis) {
-    analysisId <- analysis[["ANALYSIS_ID"]]
+    analysisId <- analysis$analysisId
     if (!dir.exists(config$exportPath)) {
       dir.create(config$exportPath)
     }
 
     batchStoreArgs <- list(config = config, analysisId = analysisId)
     message(paste("Generating scc results with setting id", analysisId))
-    analysisSettings <- RJSONIO::fromJSON(rawToChar(base64enc::base64decode(analysis["OPTIONS"])))
-
+    analysisSettings <- analysis$options
     tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, analysisId, targetCohortIds, outcomeCohortIds)
-    for (statType in names(tarStats)) {
-      exportSccTarStats(tarStats, statType, config, analysisId)
-    }
+    exportSccTarStats(tarStats, config, analysisId)
     runScc(connection = connection,
            config = config,
+           analysisId = analysisId,
            postProcessFunction = batchStoreSccResults,
            postProcessArgs = batchStoreArgs,
            analysisSettings = analysisSettings,

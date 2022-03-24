@@ -107,7 +107,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
     cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
     cohort_group = cdmConfig$tables$cohortGroup,
     analysis_setting = cdmConfig$tables$analysisSetting,
-    include_constraints = TRUE
+    include_constraints = cdmConfig$includeConstraints
   )
   DatabaseConnector::executeSql(connection, sql)
 

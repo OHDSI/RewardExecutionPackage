@@ -29,7 +29,7 @@ loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
   defaults <- list(
     useSecurePassword = FALSE,
     bulkUpload = TRUE,
-    customDrugErasCsv = ""
+    includeConstraints = FALSE
   )
   config <- yaml::read_yaml(cdmConfigPath)
   config <- .setDefaultOptions(config, defaults)
