@@ -18,7 +18,7 @@ create table @schema.@reference_version
 );
 
 /* COHORT DEFINITION TABLE */
-DROP TABLE IF EXISTS @schema.@cohort_definition;
+DROP TABLE IF EXISTS @schema.@cohort_definition {@include_constraints} ? {cascade};
 create table @schema.@cohort_definition
 (
 	cohort_definition_id bigint {@include_constraints} ? {PRIMARY KEY},
@@ -28,7 +28,7 @@ create table @schema.@cohort_definition
 );
 
 /* Exposure cohort table*/
-DROP TABLE IF EXISTS @schema.@exposure_cohort;
+DROP TABLE IF EXISTS @schema.@exposure_cohort {@include_constraints} ? {cascade};
 create table @schema.@exposure_cohort (
     cohort_definition_id {@include_constraints} ? {bigint PRIMARY KEY} : {bigint},
 	referent_concept_id bigint,
@@ -43,7 +43,7 @@ create table @schema.@exposure_cohort (
 );
 
 /* Outcome cohort table */
-DROP TABLE IF EXISTS @schema.@outcome_cohort;
+DROP TABLE IF EXISTS @schema.@outcome_cohort {@include_constraints} ? {cascade};
 create table @schema.@outcome_cohort (
     cohort_definition_id {@include_constraints} ? {bigint PRIMARY KEY} : {bigint},
 	referent_concept_id bigint,
@@ -58,7 +58,7 @@ create table @schema.@outcome_cohort (
 );
 
 /* arbitrarily group cohorts together by group */
-DROP TABLE IF EXISTS @schema.@cohort_group_definition;
+DROP TABLE IF EXISTS @schema.@cohort_group_definition {@include_constraints} ? {cascade};
 create table @schema.@cohort_group_definition (
     cohort_group_definition_id {@include_constraints} ? {int PRIMARY KEY} : {int},
     cohort_group_parent_id INT,
@@ -72,7 +72,7 @@ create table @schema.@cohort_group_definition (
     }
 );
 
-DROP TABLE IF EXISTS @schema.@cohort_group;
+DROP TABLE IF EXISTS @schema.@cohort_group {@include_constraints} ? {cascade};
 create table @schema.@cohort_group (
     cohort_definition_id BIGINT,
     cohort_group_definition_id INT,
@@ -92,7 +92,7 @@ create table @schema.@cohort_group (
 );
 
 /* COHORT CONCEPT SET LINK TABLE */
-DROP TABLE IF EXISTS @schema.@concept_set_definition;
+DROP TABLE IF EXISTS @schema.@concept_set_definition {@include_constraints} ? {cascade};
 create table @schema.@concept_set_definition
 (
     cohort_definition_id bigint,
@@ -108,7 +108,7 @@ create table @schema.@concept_set_definition
 );
 
 
-DROP TABLE IF EXISTS @schema.@atlas_cohort_reference;
+DROP TABLE IF EXISTS @schema.@atlas_cohort_reference {@include_constraints} ? {cascade};
 CREATE TABLE @schema.@atlas_cohort_reference (
     cohort_definition_id {@include_constraints} ? {int PRIMARY KEY} : {int},
     ATLAS_ID BIGINT,
@@ -125,7 +125,7 @@ CREATE TABLE @schema.@atlas_cohort_reference (
 );
 
 /* CONCEPT SET TABLE */
-DROP TABLE IF EXISTS @schema.@cohort_concept_set;
+DROP TABLE IF EXISTS @schema.@cohort_concept_set {@include_constraints} ? {cascade};
 create table @schema.@cohort_concept_set
 (
     COHORT_DEFINITION_ID bigint,
@@ -145,7 +145,7 @@ create table @schema.@cohort_concept_set
     }
 );
 
-DROP TABLE IF EXISTS @schema.@analysis_setting;
+DROP TABLE IF EXISTS @schema.@analysis_setting {@include_constraints} ? {cascade};
 CREATE TABLE @schema.@analysis_setting (
     analysis_id INT {@include_constraints} ? {PRIMARY KEY},
     type_id VARCHAR(5),
