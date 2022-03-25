@@ -25,13 +25,6 @@ create table @schema.@cohort_definition
 	cohort_definition_name varchar(1000),
 	short_name varchar(1000),
 	concept_set_id bigint
-	{@include_constraints} ? {
-    ,
-    CONSTRAINT cohort_conceptset_fk
-      FOREIGN KEY(concept_set_id)
-	    REFERENCES @concept_set_definition(concept_set_id)
-	        ON DELETE CASCADE
-    }
 );
 
 /* Exposure cohort table*/
@@ -113,6 +106,12 @@ create table @schema.@concept_set_definition
 	        ON DELETE CASCADE
     }
 );
+
+{@include_constraints} ? {
+ALTER TABLE @schema.cohort_definition
+ ADD CONSTRAINT cohort_conceptset_fk FOREIGN KEY(concept_set_id) REFERENCES @concept_set_definition(concept_set_id)
+    ON DELETE CASCADE;
+ }
 
 DROP TABLE IF EXISTS @schema.@atlas_cohort_reference;
 CREATE TABLE @schema.@atlas_cohort_reference (
