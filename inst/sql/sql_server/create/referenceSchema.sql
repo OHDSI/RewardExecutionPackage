@@ -21,7 +21,7 @@ create table @schema.@reference_version
 DROP TABLE IF EXISTS @schema.@cohort_definition;
 create table @schema.@cohort_definition
 (
-	cohort_definition_id bigint,
+	cohort_definition_id bigint {@include_constraints} ? {PRIMARY KEY},
 	cohort_definition_name varchar(1000),
 	short_name varchar(1000),
 	concept_set_id bigint
