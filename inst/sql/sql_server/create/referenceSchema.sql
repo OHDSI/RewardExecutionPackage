@@ -37,7 +37,7 @@ create table @schema.@exposure_cohort (
     ,
     CONSTRAINT exp_cohort_def_fk
       FOREIGN KEY(COHORT_DEFINITION_ID)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID)
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID)
 	        ON DELETE CASCADE
     }
 );
@@ -52,7 +52,7 @@ create table @schema.@outcome_cohort (
     ,
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(cohort_definition_id)
-	    REFERENCES @cohort_definition(cohort_definition_id)
+	    REFERENCES @schema.@cohort_definition(cohort_definition_id)
 	        ON DELETE CASCADE
     }
 );
@@ -67,7 +67,7 @@ create table @schema.@cohort_group_definition (
     ,
      CONSTRAINT cohort_def_cohort_group_fk
       FOREIGN KEY(cohort_group_parent_id)
-	    REFERENCES @cohort_group_definition(cohort_group_definition_id)
+	    REFERENCES @schema.@cohort_group_definition(cohort_group_definition_id)
 
     }
 );
@@ -81,12 +81,12 @@ create table @schema.@cohort_group (
     ,
     CONSTRAINT cohort_group_cohort_definition_fk
       FOREIGN KEY(cohort_definition_id)
-	    REFERENCES @cohort_definition(cohort_definition_id)
+	    REFERENCES @schema.@cohort_definition(cohort_definition_id)
 	        ON DELETE CASCADE,
 
      CONSTRAINT cohort_def_cohort_group_fk
       FOREIGN KEY(cohort_group_definition_id)
-	    REFERENCES @cohort_group_definition(cohort_group_definition_id)
+	    REFERENCES @schema.@cohort_group_definition(cohort_group_definition_id)
 	        ON DELETE CASCADE
     }
 );
@@ -102,14 +102,14 @@ create table @schema.@concept_set_definition
     ,
     CONSTRAINT cohort_concept_def_fk
       FOREIGN KEY(cohort_definition_id)
-	    REFERENCES @cohort_definition (cohort_definition_id)
+	    REFERENCES @schema.@cohort_definition (cohort_definition_id)
 	        ON DELETE CASCADE
     }
 );
 
 {@include_constraints} ? {
 ALTER TABLE @schema.cohort_definition
- ADD CONSTRAINT cohort_conceptset_fk FOREIGN KEY(concept_set_id) REFERENCES @concept_set_definition(concept_set_id)
+ ADD CONSTRAINT cohort_conceptset_fk FOREIGN KEY(concept_set_id) REFERENCES @schema.@concept_set_definition(concept_set_id)
     ON DELETE CASCADE;
  }
 
@@ -124,7 +124,7 @@ CREATE TABLE @schema.@atlas_cohort_reference (
     ,
     CONSTRAINT cohort_def
       FOREIGN KEY(COHORT_DEFINITION_ID)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID)
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID)
 	        ON DELETE CASCADE
 	}
 );
@@ -145,7 +145,7 @@ create table @schema.@cohort_concept_set
     ,
     CONSTRAINT cohort_def
       FOREIGN KEY(COHORT_DEFINITION_ID)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID)
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID)
 	        ON DELETE CASCADE
     }
 );
