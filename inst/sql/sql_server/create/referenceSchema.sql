@@ -107,11 +107,6 @@ create table @schema.@concept_set_definition
     }
 );
 
-{@include_constraints} ? {
-ALTER TABLE @schema.cohort_definition
- ADD CONSTRAINT cohort_conceptset_fk FOREIGN KEY(concept_set_id) REFERENCES @schema.@concept_set_definition(concept_set_id)
-    ON DELETE CASCADE;
- }
 
 DROP TABLE IF EXISTS @schema.@atlas_cohort_reference;
 CREATE TABLE @schema.@atlas_cohort_reference (
