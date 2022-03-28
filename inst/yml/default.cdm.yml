@@ -1,8 +1,7 @@
 # Values that distinguish this CDM from others
 # Source ID should be unique to avoid confusion
-# See documentation on registering a CDM in REWARD for more details
-sourceId: 0
-database: MyCdmDatabaseName
+sourceId: 0 # Don't worry about this on the first run - an ID will be given based on the unique database string
+database: MyCdmDatabaseName # This should be unqiue to the CDM and version you are working with
 name: MyCdmFriendlyName
 
 # Where results files are generated

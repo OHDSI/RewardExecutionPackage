@@ -14,6 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' Create Results Zip
+#' @description
+#' Create zip for results including CDM meta-data
+#' @param config        Reward config object
+#' @export
+createResultsZip <- function(config) {
+  checkmate::assert_class(config, "CdmConfig")
+  cdmInfo <- list(name = config$name, database = config$database, sourceId = config$sourceId)
+  writeLines(RJSONIO::toJSON(cdmInfo), file.path(config$export, "cdmInfo.json"))
+  zipfilePath <- paste0(config$database, "RewardResults.zip")
+  files <- file.path(config$export, list.files(config$export, pattern = "*.csv"))
+  files <- c(files, file.path(config$export, "cdmInfo.json"))
+  DatabaseConnector::createZipFile(zipfilePath, files, rootFolder = config$export)
+  return(zipfilePath)
+}
+
+
 #' Execute package
 #' @description
 #' Upload cohorts and references
@@ -31,4 +48,7 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
   importReferenceTables(connection, config, referenceZipFile)
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
   computeSccResults(connection, config)
+  zipPath <- createResultsZip(config)
+
+  message("Create results object ", zipPath)
 }

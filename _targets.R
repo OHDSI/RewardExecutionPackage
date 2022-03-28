@@ -45,8 +45,8 @@ getSccResults <- function(cohortsCreated, config, analysisSettings) {
 }
 
 zipSccResults <- function(timeAtRiskStats, sccReuslts, config) {
-  zipfilePath <- paste0(config$database, "RewardResults.zip")
-  DatabaseConnector::createZipFile(zipfilePath, file.path(config$export))
+  # create cdm info json file
+  zipFilePath <- RewardExecutionPackage::createResultsZip(config)
   return(zipfilePath)
 }
 
