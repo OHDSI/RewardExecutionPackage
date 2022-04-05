@@ -3,6 +3,7 @@
 export(computeSccResults)
 export(createCdmConfiguration)
 export(createCohorts)
+export(createResultsZip)
 export(execute)
 export(exportSccTarStats)
 export(getDefaultExposureIds)

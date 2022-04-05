@@ -131,7 +131,8 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
       tableName = tableName,
       data = data,
       progressBar = TRUE,
-      dropTableIfExists = TRUE,
+      createTable = FALSE,
+      dropTableIfExists = FALSE,
       bulkLoad = cdmConfig$bulkUpload
     )
 
