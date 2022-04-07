@@ -16,29 +16,6 @@
 
 CONST_META_FILE_NAME <- "reward-meta-info.json"
 
-CONST_REFERENCE_TABLES <- c(
-  'cohort_definition',
-  'exposure_cohort',
-  'outcome_cohort',
-  'cohort_group_definition',
-  'cohort_group',
-  'concept_set_definition',
-  'atlas_cohort_reference',
-  'cohort_concept_set',
-  'analysis_setting',
-  'reference_version'
-)
-
-CONST_RESULTS_TABLES <- c(
-  "cohort",
-  "scc_result"
-)
-
-CONST_EXCLUDE_REF_COLS <- list(
-  "atlasCohortReference" = c("SQL_DEFINITION", "DEFINITION")
-)
-
-
 #' @title
 #' Unzip and verify results zip with meta-data json
 #' @description
@@ -99,11 +76,6 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
     message("Inserting reference table ", tableName)
     message(paste("Using insert table", camelName, tableName, file))
     data <- vroom::vroom(file, delim = ",", show_col_types = FALSE)
-
-    # Remove columns we don't want to store on the CDM (big text strings aren't friendly with redshift)
-    if (camelName %in% names(CONST_EXCLUDE_REF_COLS)) {
-      data <- data[, !(names(data) %in% CONST_EXCLUDE_REF_COLS[[camelName]])]
-    }
 
     # Create temp tables
     DatabaseConnector::insertTable(

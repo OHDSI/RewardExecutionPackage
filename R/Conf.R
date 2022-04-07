@@ -14,6 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+CONST_RESULTS_TABLES <- c(
+  "cohort",
+  "scc_result"
+)
+
+CONST_REFERENCE_TABLES <- c(
+  'cohort_definition',
+  'exposure_cohort',
+  'outcome_cohort',
+  'cohort_group_definition',
+  'cohort_group',
+  'concept_set_definition',
+  'atlas_cohort_reference',
+  'cohort_concept_set',
+  'analysis_setting',
+  'reference_version'
+)
+
 #' load cdm config object
 #' @description
 #' Loads config and prompt user for db password
