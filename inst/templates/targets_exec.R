@@ -38,8 +38,24 @@ cohortCreation <- function(config, referencesImported) {
   return(TRUE)
 }
 
-getCohortDefinitionSet <- function(config, cohorts, referencesImported) {
-  RewardExecutionPackage::getAtlas
+getCohortDefinitionSet <- function(config, referencesImported) {
+  RewardExecutionPackage::getAtlasCohortDefinitionSet(config)
+}
+
+# Can be called with map individual cohorts or the entire set
+#
+generateAtlasCohorts <- function(config, cohortDefionitionSet) {
+  tableNames <- CohortGenertator::getCohortTableNames(config$tables$cohort)
+  CohortGenertator::generateCohortSet(connectionDetails = config$connectionDetails,
+                                      connection = connection,
+                                      cdmDatabaseSchema = config$cdmSchema,
+                                      cohortDatabaseSchema = config$resultSchema,
+                                      cohortTableNames = tableNames,
+                                      cohortDefinitionSet = cohortDefionitionSet,
+                                      stopOnError = TRUE,
+                                      incremental = TRUE,
+                                      incrementalFolder = file.path(config$referencePath, "incremental"))
+  return(TRUE)
 }
 
 importReferences <- function(config, referenceFilePath) {
@@ -56,14 +72,14 @@ getAnalysisSettings <- function(config, referencesImported) {
 }
 
 # For a given scc setting, export the time at risk stats to an RDF
-getTarStats <- function(cohortsCreated, config, analysisSettings) {
+getTarStats <- function(cohortsCreated, config, analysisSettings, atlasCohorts) {
   connection <- DatabaseConnector::connect(config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
   tarStats <- RewardExecutionPackage::getSccRiskWindowStats(connection, config, analysisSettings$options[[1]], analysisSettings$analysisId)
   RewardExecutionPackage::exportSccTarStats(tarStats, config, analysisSettings$analysisId)
 }
 
-getSccResults <- function(cohortsCreated, config, analysisSettings) {
+getSccResults <- function(cohortsCreated, config, analysisSettings, atlasCohorts) {
   connection <- DatabaseConnector::connect(config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
   RewardExecutionPackage::runScc(connection, config, analysisSettings$options[[1]], analysisSettings$analysisId)
@@ -87,11 +103,13 @@ list(
   tar_target(referenceFilePath, file.path(refPath), format = "file"),
   tar_target(referenceImport, importReferences(config, referenceFilePath), pattern = cross(config)),
   tar_target(cohortExecution, cohortCreation(config, referenceImport), pattern = cross(config)),
+  tar_target(cohortDefinitionSet, getCohortDefinitionSet(config, referenceImport), pattern = cross(config)),
+  tar_target(atlasCohorts, generateAtlasCohorts(config, cohortDefionitionSet), pattern = cross(config, cohortDefinitionSet))
   tar_target(analysisSettings, getAnalysisSettings(config, referenceImport), pattern = cross(config)),
-  tar_target(timeAtRiskStats, getTarStats(cohortExecution, config, analysisSettings),
+  tar_target(timeAtRiskStats, getTarStats(cohortExecution, config, analysisSettings, atlasCohorts),
              pattern = cross(analysisSettings, config),
              format = "file"),
-  tar_target(sccResults, getSccResults(cohortExecution, config, analysisSettings),
+  tar_target(sccResults, getSccResults(cohortExecution, config, analysisSettings, atlasCohorts),
              pattern = cross(analysisSettings, config),
              format = "file"),
   tar_target(zipResults,

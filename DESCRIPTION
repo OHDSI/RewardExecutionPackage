@@ -17,7 +17,8 @@ Imports:
     tools,
     checkmate,
     vroom,
-    dplyr
+    dplyr,
+    CohortGenerator
 Suggests:
     testthat,
     withr,
@@ -26,6 +27,7 @@ Suggests:
     targets
 Remotes:
     OHDSI/SelfControlledCohort,
+    OHDSI/CohortGenerator,
     OHDSI/Eunomia
 Description: Study execution package for generating REWARD results.
     Uses SelfControlledCohort package to generate effect estimates.

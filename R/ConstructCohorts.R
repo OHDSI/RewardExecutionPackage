@@ -34,7 +34,6 @@ createCohorts <- function(connection, config, deleteExisting = FALSE) {
 
   createExposureCohorts(connection, config)
   createOutcomeCohorts(connection, config)
-  computeAtlasCohorts(connection, config)
 }
 
 createExposureCohorts <- function(connection, config) {
@@ -52,36 +51,36 @@ createExposureCohorts <- function(connection, config) {
   DatabaseConnector::executeSql(connection, sql)
 }
 
-#' @title
-#' get Uncomputed Atlas Cohorts
+#' Get Atlas Cohort Definition Set
 #' @description
-#' Get cohorts that haven't been computed and return their references from file on disk
-#' SQL and JSON references are not stored in the CDM database's scratch schema
-#' @param connection                    connection
-#' @param config                        cdmConfig
-#' @param exposureCohorts               get exposures or not
-getUncomputedAtlasCohorts <- function(connection, config) {
+#' Get Reward atlas cohort definitions
+#' @param config        CdmConfig object
+#' @export
+getAtlasCohortDefinitionSet <- function (config) {
+  CohortGenerator::getCohortDefinitionSet(settingsFileName = "AtlasCohorts.csv",
+                                          jsonFolder = file.path(config$referencePath, "cohorts"),
+                                          sqlFolder = file.path(config$referencePath, "sql"),
+                                          cohortFileNameFormat = "%s",
+                                          cohortFileNameValue = c("cohortId"))
+}
 
-  # Get only null atlas cohorts
-  atlaSql <- "
-  SELECT aor.cohort_definition_id
-  FROM @reference_schema.@atlas_reference aor
-  LEFT JOIN
-    (
-      SELECT DISTINCT cohort_definition_id
-      FROM @result_schema.@cohort_table
-    ) oct on oct.cohort_definition_id = aor.cohort_definition_id
-  WHERE oct.cohort_definition_id IS NULL
-  "
-  atlasCohorts <- DatabaseConnector::renderTranslateQuerySql(connection,
-                                                             atlaSql,
-                                                             reference_schema = config$referenceSchema,
-                                                             result_schema = config$resultSchema,
-                                                             cohort_table = config$tables$cohort,
-                                                             atlas_reference = config$tables$atlasCohortReference)
-
-  fullCohorts <- read.csv(file.path(config$referencePath, "atlas_cohort_reference.csv"))
-  return(fullCohorts[fullCohorts$COHORT_DEFINITION_ID %in% atlasCohorts$COHORT_DEFINITION_ID,])
+#' Generate bulk cohorts with cohort generator
+#' @description
+#' Use cohort generator to create cohorts
+#' @param config        CdmConfig object
+#' @param connection    DatabaseConnector::connection instance
+#' @export
+generateAtlasCohortSet <- function(config, connection = NULL) {
+  tableNames <- CohortGenertator::getCohortTableNames(config$tables$cohort)
+  CohortGenertator::generateCohortSet(connectionDetails = config$connectionDetails,
+                                      connection = connection,
+                                      cdmDatabaseSchema = config$cdmSchema,
+                                      cohortDatabaseSchema = config$resultSchema,
+                                      cohortTableNames = tableNames,
+                                      cohortDefinitionSet = getAtlasCohortDefinitionSet(config),
+                                      stopOnError = TRUE,
+                                      incremental = TRUE,
+                                      incrementalFolder = file.path(config$referencePath, "incremental"))
 }
 
 createOutcomeCohorts <- function(connection, config) {
@@ -145,28 +144,5 @@ createOutcomeCohorts <- function(connection, config) {
                                                    outcome_cohort = config$tables$outcomeCohort)
       count <- cohortsToCompute(cohortType$type)
     }
-  }
-}
-
-#' @title
-#' Compute Atlas cohorts
-#' @description
-#' Computes sql cohorts against the CDM
-#' @param connection          DatabaseConnector connection to cdm
-#' @param config              cdmConfiguration object
-computeAtlasCohorts <- function(connection, config) {
-  atlasCohorts <- getUncomputedAtlasCohorts(connection, config)
-  if (nrow(atlasCohorts) > 0) {
-    # Generate each cohort
-    apply(atlasCohorts, 1, function(cohortReference) {
-      message("computing custom cohort: ", cohortReference["COHORT_DEFINITION_ID"])
-      DatabaseConnector::renderTranslateExecuteSql(connection,
-                                                   sql = rawToChar(base64enc::base64decode(cohortReference["SQL_DEFINITION"])),
-                                                   cdm_database_schema = config$cdmSchema,
-                                                   vocabulary_database_schema = config$vocabularySchema,
-                                                   target_database_schema = config$resultSchema,
-                                                   target_cohort_table = config$tables$cohort,
-                                                   target_cohort_id = cohortReference["COHORT_DEFINITION_ID"])
-    })
   }
 }

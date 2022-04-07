@@ -67,8 +67,6 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   meta <- RJSONIO::readJSONStream(file.path(unzipPath, CONST_META_FILE_NAME))
 
   message(paste("Verifying file checksums"))
-  # Check files are valid
-
   for (file in names(meta$hashList)) {
     hash <- meta$hashList[[file]]
     message(paste("checking file hash", file, hash))
@@ -93,11 +91,37 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
 importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
   checkmate::assertFileExists(zipFilePath)
   unzipAndVerify(zipFilePath, cdmConfig$referencePath, TRUE)
+  fileList <- file.path(cdmConfig$referencePath, paste0(CONST_REFERENCE_TABLES, ".csv"))
+  for (file in fileList) {
+    camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
+    tableName <- cdmConfig$tables[[camelName]]
 
-  message("Creating reference tables")
+    message("Inserting reference table ", tableName)
+    message(paste("Using insert table", camelName, tableName, file))
+    data <- vroom::vroom(file, delim = ",", show_col_types = FALSE)
+
+    # Remove columns we don't want to store on the CDM (big text strings aren't friendly with redshift)
+    if (camelName %in% names(CONST_EXCLUDE_REF_COLS)) {
+      data <- data[, !(names(data) %in% CONST_EXCLUDE_REF_COLS[[camelName]])]
+    }
+
+    # Create temp tables
+    DatabaseConnector::insertTable(
+      connection = connection,
+      tableName = paste0("#", tableName),
+      data = data,
+      tempTable = TRUE,
+      progressBar = TRUE,
+      createTable = TRUE,
+      dropTableIfExists = TRUE,
+      bulkLoad = cdmConfig$bulkUpload
+    )
+  }
+
+  message("Creating reference tables and copying temp data")
   sql <- SqlRender::loadRenderTranslateSql(
     file.path("create", "referenceSchema.sql"),
-    package = packageName(),
+    package = utils::packageName(),
     dbms = connection@dbms,
     schema = cdmConfig$referenceSchema,
     concept_set_definition = cdmConfig$tables$conceptSetDefinition,
@@ -107,34 +131,8 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
     cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
     cohort_group = cdmConfig$tables$cohortGroup,
     analysis_setting = cdmConfig$tables$analysisSetting,
-    include_constraints = cdmConfig$includeConstraints
+    include_constraints = cdmConfig$includeConstraints,
+    copy_temp_table = TRUE
   )
   DatabaseConnector::executeSql(connection, sql)
-
-  fileList <- file.path(cdmConfig$referencePath, paste0(CONST_REFERENCE_TABLES, ".csv"))
-  for (file in fileList) {
-    camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
-    tableName <- cdmConfig$tables[[camelName]]
-
-    message("Inserting reference table ", tableName)
-    message(paste("Using insert table", camelName, tableName, file))
-    data <- read.csv(file)
-
-    # Remove columns we don't want to store on the CDM (big text strings aren't friendly with redshift)
-    if (camelName %in% names(CONST_EXCLUDE_REF_COLS)) {
-      data <- data[, !(names(data) %in% CONST_EXCLUDE_REF_COLS[[camelName]])]
-    }
-
-    DatabaseConnector::insertTable(
-      connection = connection,
-      databaseSchema = cdmConfig$referenceSchema,
-      tableName = tableName,
-      data = data,
-      progressBar = TRUE,
-      createTable = FALSE,
-      dropTableIfExists = FALSE,
-      bulkLoad = cdmConfig$bulkUpload
-    )
-
-  }
 }

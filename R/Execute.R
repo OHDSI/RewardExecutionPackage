@@ -47,6 +47,7 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
 
   importReferenceTables(connection, config, referenceZipFile)
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
+  generateAtlasCohortSet(config, connection)
   computeSccResults(connection, config)
   zipPath <- createResultsZip(config)
 
