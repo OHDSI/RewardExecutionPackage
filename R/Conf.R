@@ -202,3 +202,24 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
 
    message("Configuration appears valid")
 }
+
+#' Create targets file
+#' @description
+#' Targets is a workflow manager for R execution tasks that prevents the reptition of work.
+#' This utility function creates a targets file that can be used to execute Reward on a CDM
+#'
+#' @param path          Path where targets file will live - targets expects _targets.R by default
+#' @export
+createTargetsFile <- function(path = "_targets.R", overwrite = FALSE) {
+  if (!overwrite & file.exists(path)) {
+    stop("File ", path, "already exists. Set overwrite = TRUE to continue")
+  }
+
+  if (system.file(package = "targets") == "") {
+    message("targets package not found. Installing.")
+    install.packages("targets.R")
+  }
+
+  file.copy(system.file(file.path("templates", "targets_exec.R"), package = packageName()), path)
+  message("Created targets file", path)
+}
