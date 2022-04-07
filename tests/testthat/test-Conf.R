@@ -15,3 +15,15 @@ test_that("Check configuration file loads", {
 
   expect_s3_class(config, "CdmConfig")
 })
+
+test_that("Copy targets file", {
+  dest <- file.path(tempdir(), "_targets.R")
+  unlink(dest)
+  on.exit(unlink(dest))
+  createTargetsFile(path = dest)
+  checkmate::expect_file_exists(dest)
+  expect_error(createTargetsFile(path = dest))
+
+  createTargetsFile(path = dest, overwrite = TRUE)
+  checkmate::expect_file_exists(dest)
+})
