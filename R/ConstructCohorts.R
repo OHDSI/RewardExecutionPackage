@@ -71,8 +71,8 @@ getAtlasCohortDefinitionSet <- function (config) {
 #' @param connection    DatabaseConnector::connection instance
 #' @export
 generateAtlasCohortSet <- function(config, connection = NULL) {
-  tableNames <- CohortGenertator::getCohortTableNames(config$tables$cohort)
-  CohortGenertator::generateCohortSet(connectionDetails = config$connectionDetails,
+  tableNames <- CohortGenerator::getCohortTableNames(config$tables$cohort)
+  CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
                                       connection = connection,
                                       cdmDatabaseSchema = config$cdmSchema,
                                       cohortDatabaseSchema = config$resultSchema,
