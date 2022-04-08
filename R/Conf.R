@@ -65,7 +65,7 @@ loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
   }
 
   if (config$useSecurePassword & !is.null(config$keyringService)) {
-    message("Using keyring service ", config$keyringService, "to set database passwrod for", config$connectionDetails$user)
+    message("Using keyring service ", config$keyringService, " to set database password for ", config$connectionDetails$user)
     config$connectionDetails$password <- keyring::key_get(config$keyringService, username = config$connectionDetails$user, keyring = keyring)
   }
   config$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, config$connectionDetails)
