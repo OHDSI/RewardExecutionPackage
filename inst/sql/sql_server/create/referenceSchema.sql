@@ -41,8 +41,8 @@ create table @schema.@cohort_definition
 INSERT INTO @schema.@cohort_definition
 SELECT
     CAST(cohort_definition_id AS bigint),
-    CAST(cohort_definition_name AS varchar(1000)),
-    CAST(short_name AS varchar(1000)),
+    CAST(cohort_definition_name AS varchar(max)),
+    CAST(short_name AS varchar(max)),
     CAST(concept_set_id AS bigint)
 FROM #cohort_definition;
 TRUNCATE TABLE #cohort_definition;
@@ -106,7 +106,7 @@ DROP TABLE IF EXISTS @schema.@cohort_group_definition {@include_constraints} ? {
 create table @schema.@cohort_group_definition (
     cohort_group_definition_id {@include_constraints} ? {int PRIMARY KEY} : {int},
     cohort_group_parent_id INT,
-    group_name varchar(1000)
+    group_name varchar(max)
     {@include_constraints} ? {
     ,
      CONSTRAINT cohort_def_cohort_group_fk
@@ -121,7 +121,7 @@ INSERT INTO @schema.@cohort_group_definition
 SELECT
     CAST(cohort_group_definition_id AS INT),
     CAST(cohort_group_parent_id AS INT),
-    CAST(group_name AS varchar(1000))
+    CAST(group_name AS varchar(max))
 FROM #cohort_group_definition;
 TRUNCATE TABLE #cohort_group_definition;
 DROP TABLE #cohort_group_definition;
@@ -165,7 +165,7 @@ create table @schema.@concept_set_definition
 (
     cohort_definition_id bigint,
 	concept_set_id BIGINT,
-	concept_set_name varchar(1000)
+	concept_set_name varchar(max)
 	{@include_constraints} ? {
     ,
     CONSTRAINT cohort_concept_def_fk
@@ -180,7 +180,7 @@ INSERT INTO @schema.@concept_set_definition
 SELECT
     CAST(cohort_definition_id AS BIGINT),
     CAST(concept_set_id AS BIGINT),
-    CAST(concept_set_name AS varchar(1000))
+    CAST(concept_set_name AS varchar(max))
 FROM #concept_set_definition;
 TRUNCATE TABLE #concept_set_definition;
 DROP TABLE #concept_set_definition;
@@ -225,7 +225,7 @@ create table @schema.@cohort_concept_set
 	concept_set_id bigint,
 	concept_id bigint,
 	-- Stored because it can be used in shiny apps without requring full rxnorm/snomed vocab
-	concept_name varchar(1000),
+	concept_name varchar(max),
 	is_excluded INT,
 	include_descendants INT,
 	include_mapped INT
@@ -244,7 +244,7 @@ SELECT
     CAST(COHORT_DEFINITION_ID AS BIGINT),
 	CAST(concept_set_id AS bigint),
 	CAST(concept_id AS bigint),
-	CAST(concept_name AS varchar(1000)),
+	CAST(concept_name AS varchar(max)),
 	CAST(is_excluded AS INT),
 	CAST(include_descendants AS INT),
 	CAST(include_mapped AS INT)
