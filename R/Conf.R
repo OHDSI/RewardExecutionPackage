@@ -175,6 +175,12 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
     })
     on.exit(DatabaseConnector::disconnect(connection))
 
+    if (connection@dbms == "redshift" & system.file(package = "aws.s3") == "") {
+      message("aws.s3 required for bulk upload. Installing package.
+      See DatabaseConnector documentation for details on S3 configuration")
+      install.packages("aws.s3")
+    }
+
     # Test schemas exists
     message("Checking CDM schema")
     tryCatch({
@@ -235,7 +241,7 @@ createTargetsFile <- function(path = "_targets.R", overwrite = FALSE) {
 
   if (system.file(package = "targets") == "") {
     message("targets package not found. Installing.")
-    install.packages("targets.R")
+    install.packages("targets")
   }
 
   file.copy(system.file(file.path("templates", "targets_exec.R"), package = packageName()), path)

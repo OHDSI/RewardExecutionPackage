@@ -18,12 +18,12 @@ Imports:
     checkmate,
     vroom,
     dplyr,
-    CohortGenerator
+    CohortGenerator,
+    R.utils
 Suggests:
     testthat,
     withr,
     Eunomia,
-    R.utils,
     targets
 Remotes:
     OHDSI/SelfControlledCohort,

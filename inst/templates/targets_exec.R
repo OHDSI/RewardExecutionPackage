@@ -22,7 +22,7 @@
 library(targets)
 
 # Change these to match your desired locations
-refPath <- "reward_references.zip"
+refPath <- "reward-references.zip"
 cdmConfigDir <- "cdmConfig"
 
 loadConfiguration <- function(cdmConfigPath) {
@@ -98,18 +98,18 @@ options(threadNumber = "main")
 options(clustermq.scheduler = "multiprocess")
 
 list(
-  tar_target(configPath, list.files(cdmConfigDir)),
+  tar_target(configPath, file.path(cdmConfigDir, list.files(cdmConfigDir))),
   tar_target(config, loadConfiguration(configPath), pattern = cross(configPath)),
   tar_target(referenceFilePath, file.path(refPath), format = "file"),
   tar_target(referenceImport, importReferences(config, referenceFilePath), pattern = cross(config)),
   tar_target(cohortExecution, cohortCreation(config, referenceImport), pattern = cross(config)),
   tar_target(cohortDefinitionSet, getCohortDefinitionSet(config, referenceImport), pattern = cross(config)),
-  tar_target(atlasCohorts, generateAtlasCohorts(config, cohortDefionitionSet), pattern = cross(config, cohortDefinitionSet))
+  tar_target(atlasCohortsGen, generateAtlasCohorts(config, cohortDefionitionSet), pattern = cross(config, cohortDefinitionSet)),
   tar_target(analysisSettings, getAnalysisSettings(config, referenceImport), pattern = cross(config)),
-  tar_target(timeAtRiskStats, getTarStats(cohortExecution, config, analysisSettings, atlasCohorts),
+  tar_target(timeAtRiskStats, getTarStats(cohortExecution, config, analysisSettings, atlasCohortsGen),
              pattern = cross(analysisSettings, config),
              format = "file"),
-  tar_target(sccResults, getSccResults(cohortExecution, config, analysisSettings, atlasCohorts),
+  tar_target(sccResults, getSccResults(cohortExecution, config, analysisSettings, atlasCohortsGen),
              pattern = cross(analysisSettings, config),
              format = "file"),
   tar_target(zipResults,
