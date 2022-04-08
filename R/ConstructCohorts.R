@@ -57,9 +57,9 @@ createExposureCohorts <- function(connection, config) {
 #' @param config        CdmConfig object
 #' @export
 getAtlasCohortDefinitionSet <- function (config) {
-  CohortGenerator::getCohortDefinitionSet(settingsFileName = "AtlasCohorts.csv",
-                                          jsonFolder = file.path(config$referencePath, "cohorts"),
-                                          sqlFolder = file.path(config$referencePath, "sql"),
+  CohortGenerator::getCohortDefinitionSet(settingsFileName = file.path(config$export, "AtlasCohorts.csv"),
+                                          jsonFolder = file.path(config$export, "cohorts"),
+                                          sqlFolder = file.path(config$export, "sql"),
                                           cohortFileNameFormat = "%s",
                                           cohortFileNameValue = c("cohortId"))
 }
