@@ -39,22 +39,26 @@ cohortCreation <- function(config, referencesImported) {
 }
 
 getCohortDefinitionSet <- function(config, referencesImported) {
+  tableNames <- CohortGenerator::getCohortTableNames(config$tables$cohort)
+  CohortGenerator::createCohortTables(connectionDetails = config$connectionDetails,
+                                      cohortDatabaseSchema = config$resultSchema,
+                                      cohortTableNames = tableNames,
+                                      incremental = TRUE)
   RewardExecutionPackage::getAtlasCohortDefinitionSet(config)
 }
 
 # Can be called with map individual cohorts or the entire set
 #
-generateAtlasCohorts <- function(config, cohortDefionitionSet) {
-  tableNames <- CohortGenertator::getCohortTableNames(config$tables$cohort)
-  CohortGenertator::generateCohortSet(connectionDetails = config$connectionDetails,
-                                      connection = connection,
-                                      cdmDatabaseSchema = config$cdmSchema,
-                                      cohortDatabaseSchema = config$resultSchema,
-                                      cohortTableNames = tableNames,
-                                      cohortDefinitionSet = cohortDefionitionSet,
-                                      stopOnError = TRUE,
-                                      incremental = TRUE,
-                                      incrementalFolder = file.path(config$referencePath, "incremental"))
+generateAtlasCohorts <- function(config, cohortDefinitionSet) {
+  tableNames <- CohortGenerator::getCohortTableNames(config$tables$cohort)
+  CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
+                                     cdmDatabaseSchema = config$cdmSchema,
+                                     cohortDatabaseSchema = config$resultSchema,
+                                     cohortTableNames = tableNames,
+                                     cohortDefinitionSet = cohortDefinitionSet,
+                                     stopOnError = FALSE,
+                                     incremental = TRUE,
+                                     incrementalFolder = file.path(config$referencePath, config$database, incremental))
   return(TRUE)
 }
 
@@ -104,7 +108,7 @@ list(
   tar_target(referenceImport, importReferences(config, referenceFilePath), pattern = cross(config)),
   tar_target(cohortExecution, cohortCreation(config, referenceImport), pattern = cross(config)),
   tar_target(cohortDefinitionSet, getCohortDefinitionSet(config, referenceImport), pattern = cross(config)),
-  tar_target(atlasCohortsGen, generateAtlasCohorts(config, cohortDefionitionSet), pattern = cross(config, cohortDefinitionSet)),
+  tar_target(atlasCohortsGen, generateAtlasCohorts(config, cohortDefinitionSet), pattern = cross(config, cohortDefinitionSet)),
   tar_target(analysisSettings, getAnalysisSettings(config, referenceImport), pattern = cross(config)),
   tar_target(timeAtRiskStats, getTarStats(cohortExecution, config, analysisSettings, atlasCohortsGen),
              pattern = cross(analysisSettings, config),

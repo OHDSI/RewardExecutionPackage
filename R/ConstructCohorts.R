@@ -72,13 +72,17 @@ getAtlasCohortDefinitionSet <- function (config) {
 #' @export
 generateAtlasCohortSet <- function(config, connection = NULL) {
   tableNames <- CohortGenerator::getCohortTableNames(config$tables$cohort)
+  CohortGenerator::createCohortTables(connectionDetails = config$connectionDetails,
+                                      cohortDatabaseSchema = config$resultSchema,
+                                      cohortTableNames = tableNames,
+                                      incremental = TRUE)
   CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
                                       connection = connection,
                                       cdmDatabaseSchema = config$cdmSchema,
                                       cohortDatabaseSchema = config$resultSchema,
                                       cohortTableNames = tableNames,
                                       cohortDefinitionSet = getAtlasCohortDefinitionSet(config),
-                                      stopOnError = TRUE,
+                                      stopOnError = FALSE,
                                       incremental = TRUE,
                                       incrementalFolder = file.path(config$referencePath, "incremental"))
 }
