@@ -27,7 +27,7 @@ CONST_META_FILE_NAME <- "reward-meta-info.json"
 #'
 #' @import ParallelLogger
 #' @importFrom utils unzip
-#' @importFrom RJSONIO readJSONStream
+#' @importFrom jsonlite read_json
 #' @importFrom tools md5sum file_path_as_absolute
 unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   message("Inflating zip archive")
@@ -65,9 +65,14 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
 #' @param cdmConfig                     cdmConfig object
 #' @param zipFilePath                   zip file path
 #' @export
-importReferenceTables <- function(connection, cdmConfig, zipFilePath) {
+importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteReferences = FALSE) {
   checkmate::assertFileExists(zipFilePath)
-  unzipAndVerify(zipFilePath, cdmConfig$referencePath, TRUE)
+  metaFilePath <- file.path(cdmConfig$referencePath, CONST_META_FILE_NAME)
+
+  if (!file.exists(metaFilePath)) {
+    unzipAndVerify(zipFilePath, cdmConfig$referencePath, overwriteReferences)
+  }
+
   fileList <- file.path(cdmConfig$referencePath, paste0(CONST_REFERENCE_TABLES, ".csv"))
   for (file in fileList) {
     camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
