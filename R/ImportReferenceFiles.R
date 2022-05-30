@@ -41,7 +41,7 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   # Perform checksum verifications
   metaFilePath <- file.path(unzipPath, CONST_META_FILE_NAME)
   checkmate::assert_file_exists(metaFilePath)
-  meta <- RJSONIO::readJSONStream(file.path(unzipPath, CONST_META_FILE_NAME))
+  meta <- jsonlite::read_json(file.path(unzipPath, CONST_META_FILE_NAME))
 
   message(paste("Verifying file checksums"))
   for (file in names(meta$hashList)) {
