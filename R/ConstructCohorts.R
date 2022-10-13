@@ -55,9 +55,27 @@ createExposureCohorts <- function(connection, config) {
 #' @description
 #' Get Reward atlas cohort definitions
 #' @param config        CdmConfig object
+#' @param connection    (optional) DatabaseConnector connection
 #' @export
-getAtlasCohortDefinitionSet <- function (config) {
-  CohortGenerator::getCohortDefinitionSet(settingsFileName = file.path(config$referencePath, "atlas_cohorts.csv"),
+getAtlasCohortDefinitionSet <- function(config, connection = NULL) {
+
+  sql <- "
+  SELECT acr.cohort_definition_id as cohort_id,
+         cd.short_name as cohort_name
+  FROM @schema.@atlas_cohort_reference
+  INNER JOIN @schema.@cohort_definition
+  "
+  cDefSet <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                        sql,
+                                                        schema = config$referenceSchema,
+                                                        atlas_cohort_reference = config$tables$atlasCohortReference,
+                                                        cohort_definition = config$tables$cohortDefinition,
+                                                        snakeCaseToCamelCase = TRUE)
+
+  tfile <- tempfile(fileext = ".csv")
+  readr::write_csv(cDefSet, tfile)
+  on.exit(unlink(tfile), add = TRUE)
+  CohortGenerator::getCohortDefinitionSet(settingsFileName = tfile,
                                           jsonFolder = file.path(config$referencePath, "cohorts"),
                                           sqlFolder = file.path(config$referencePath, "sql"),
                                           cohortFileNameFormat = "%s",
@@ -77,14 +95,14 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
                                       cohortTableNames = tableNames,
                                       incremental = TRUE)
   CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
-                                      connection = connection,
-                                      cdmDatabaseSchema = config$cdmSchema,
-                                      cohortDatabaseSchema = config$resultSchema,
-                                      cohortTableNames = tableNames,
-                                      cohortDefinitionSet = getAtlasCohortDefinitionSet(config),
-                                      stopOnError = FALSE,
-                                      incremental = TRUE,
-                                      incrementalFolder = file.path(config$referencePath, "incremental"))
+                                     connection = connection,
+                                     cdmDatabaseSchema = config$cdmSchema,
+                                     cohortDatabaseSchema = config$resultSchema,
+                                     cohortTableNames = tableNames,
+                                     cohortDefinitionSet = getAtlasCohortDefinitionSet(config, connection),
+                                     stopOnError = FALSE,
+                                     incremental = TRUE,
+                                     incrementalFolder = file.path(config$referencePath, "incremental"))
 }
 
 createOutcomeCohorts <- function(connection, config) {
