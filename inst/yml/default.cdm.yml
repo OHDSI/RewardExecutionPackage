@@ -38,6 +38,10 @@ vocabularySchema: "cdmv5"
 # Optional: schema for storing custom drug eras
 drugEraSchema: "reward"
 
+# Optional - using aws to log
+useAwsS3Export: FALSE
+awsS3Log: ~ # Write a shared logfile for uploading to postgres
+
 # Tables to be created and used by REWARD
 tables:
   sccResult: "scc_result"

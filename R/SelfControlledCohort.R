@@ -127,8 +127,28 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                     "maximum" = "max",
                     "minimum" = "min",
                     "stat_type" = "statType")
-    vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = append)
-    append <- TRUE
+
+    if (config$useAwsS3Export) {
+      dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId,
+                                                          "stat-", statType, ".csv"))
+
+      success <- aws.s3::s3write_using(data,
+                                       readr::write_csv,
+                                       object = object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
+                                       na = "",
+                                       append = FALSE,
+                                       opts = list(
+                                         check_region = FALSE,
+                                         headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE")),
+                                         bucket = Sys.getenv("AWS_BUCKET_NAME")
+                                       ))
+
+      log <- data.frame(filename = dataFileName, position = statType, success = success)
+      readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
+    } else {
+      vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = append)
+      append <- TRUE
+    }
 
   }
   return(dataFileName)
@@ -136,8 +156,11 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
 
 #' Get default results file name
 #' @export
-getDefaultSccDataFileName <- function(config, analysisId) {
-  file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv"))
+getDefaultSccDataFileName <- function(config, analysisId, position = NULL) {
+  if (is.null(position))
+    return(file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv")))
+
+  return(file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, "pos-", position, ".csv")))
 }
 
 # Export analysis results to a csv file in batches (assumes the data set is large)
@@ -153,6 +176,37 @@ batchStoreSccResults <- function(dataBatch,
 
   message("Saving results ", dataFileName, " position ", position)
   vroom::vroom_write(dataBatch, dataFileName, delim = ",", na = "", append = position != 1)
+  return(dataBatch)
+}
+
+
+# Export analysis results to a csv file in batches to s3 bucket (assumes the data set is large)
+batchStoreSccResultsToS3 <- function(dataBatch,
+                                     position,
+                                     config,
+                                     analysisId,
+                                     dataFileName = getDefaultSccDataFileName(config, analysisId, position = position)) {
+  if (nrow(dataBatch) == 0) {
+    return(dataBatch)
+  }
+  dataBatch <- cleanUpSccDf(dataBatch, config$sourceId, analysisId)
+
+  message("Saving results ", dataFileName, " position ", position, " to aws.s3")
+  success <- aws.s3::s3write_using(dataBatch,
+                                   readr::write_csv,
+                                   object = object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
+                                   na = "",
+                                   append = FALSE,
+                                   opts = list(
+                                     check_region = FALSE,
+                                     headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE")),
+                                     bucket = Sys.getenv("AWS_BUCKET_NAME")
+                                   ))
+
+  ## log files that have been completed
+  log <- data.frame(filename = dataFileName, position = position, success = success)
+  readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
+
   return(dataBatch)
 }
 
@@ -276,7 +330,7 @@ computeSccResults <- function(connection,
     runScc(connection = connection,
            config = config,
            analysisId = analysisId,
-           postProcessFunction = batchStoreSccResults,
+           postProcessFunction = ifelse(config$useAwsS3Export, batchStoreSccResultsToS3, batchStoreSccResults),
            postProcessArgs = batchStoreArgs,
            analysisSettings = analysisSettings,
            exposureIds = targetCohortIds,

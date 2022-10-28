@@ -47,7 +47,9 @@ loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
   defaults <- list(
     useSecurePassword = FALSE,
     bulkUpload = TRUE,
-    includeConstraints = FALSE
+    includeConstraints = FALSE,
+    useAwsS3Export = FALSE,
+    awsS3Log = "s3-log.csv"
   )
   config <- yaml::read_yaml(cdmConfigPath)
   config <- .setDefaultOptions(config, defaults)
@@ -125,13 +127,13 @@ createCdmConfiguration <- function(cdmConfigPath,
       keyring::key_get(cdmConfig$keyringService, username = user, keyring = keyring)
       message("Password for", user, " with service ", cdmConfig$keyringService, " already exists. Use keyring::keyset to change")
     },
-    error = function(...) {
-      message("Set keyring password for cdm user ", user, " with service ", cdmConfig$keyringService)
-      keyring::key_set(cdmConfig$keyringService,
-                       username = user,
-                       keyring = keyring,
-                       prompt = paste("Enter CDM database password for user", user))
-    })
+      error = function(...) {
+        message("Set keyring password for cdm user ", user, " with service ", cdmConfig$keyringService)
+        keyring::key_set(cdmConfig$keyringService,
+                         username = user,
+                         keyring = keyring,
+                         prompt = paste("Enter CDM database password for user", user))
+      })
   }
 
   validateCdmConfigFile(cdmConfigPath, testConnection = testConnection)
@@ -142,9 +144,10 @@ createCdmConfiguration <- function(cdmConfigPath,
 #' Opens a file for editing that contains the default settings for a cdm
 #'
 #' @inheritParams loadCdmConfiguration
-#' @param testConnection                Attempt to connect to database and write to schemas needed for writing?
+#' @param testConnection               Attempt to connect to database and write to schemas needed for writing?
+#' @param testS3Rw                     If useAwsS3Export is set to true, test reding and writing of objects to s3
 #' @export
-validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring = NULL) {
+validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring = NULL, testS3Rw = TRUE) {
   # Check required parameters exist
   requiredNames <- c("sourceId",
                      "database",
@@ -224,7 +227,34 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
     message("Database configuration appears valid")
   }
 
-   message("Configuration appears valid")
+  if (cdmConfig$useAwsS3Export) {
+    if (system.file(package = "aws.s3") == "") {
+      install.packages("aws.s3")
+    }
+
+    if (testS3Rw) {
+      object <- paste(Sys.getenv("AWS_OBJECT_KEY"), tempfile(fileext = ".csv"), sep = "/")
+      tryCatch({
+        aws.s3::s3write_using(mtcars,
+                              readr::write_csv,
+                              object = object,
+                              bucket = Sys.getenv("AWS_BUCKET_NAME"),
+                              na = "",
+                              opts = list(
+                                headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE")),
+                                check_region = FALSE
+                              ),
+                              append = FALSE)
+
+        aws.s3::delete_object(object = object,
+                              bucket = Sys.getenv("AWS_BUCKET_NAME"))
+      }, error = function(err) {
+        stop("Error using s3 bucket - ", err)
+      })
+    }
+  }
+
+  message("Configuration appears valid")
 }
 
 #' Create targets file
