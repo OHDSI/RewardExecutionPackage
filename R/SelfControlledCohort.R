@@ -134,7 +134,7 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
 
       success <- aws.s3::s3write_using(data,
                                        readr::write_csv,
-                                       object = object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
+                                       object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
                                        na = "",
                                        append = FALSE,
                                        opts = list(
@@ -194,7 +194,7 @@ batchStoreSccResultsToS3 <- function(dataBatch,
   message("Saving results ", dataFileName, " position ", position, " to aws.s3")
   success <- aws.s3::s3write_using(dataBatch,
                                    readr::write_csv,
-                                   object = object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
+                                   object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
                                    na = "",
                                    append = FALSE,
                                    opts = list(
