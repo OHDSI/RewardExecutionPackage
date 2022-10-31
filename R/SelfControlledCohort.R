@@ -132,6 +132,7 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
       dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId,
                                                           "stat-", statType, ".csv"))
 
+      checksum <- digest::digest(data, "sha1")
       success <- aws.s3::s3write_using(data,
                                        readr::write_csv,
                                        object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
@@ -143,7 +144,7 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                                          bucket = Sys.getenv("AWS_BUCKET_NAME")
                                        ))
 
-      log <- data.frame(filename = dataFileName, position = statType, success = success)
+      log <- data.frame(filename = dataFileName, position = statType, success = success, checksum = checksum)
       readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
     } else {
       vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = append)
@@ -192,6 +193,7 @@ batchStoreSccResultsToS3 <- function(dataBatch,
   dataBatch <- cleanUpSccDf(dataBatch, config$sourceId, analysisId)
 
   message("Saving results ", dataFileName, " position ", position, " to aws.s3")
+  checksum <- digest::digest(dataBatch, "sha1")
   success <- aws.s3::s3write_using(dataBatch,
                                    readr::write_csv,
                                    object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
@@ -204,7 +206,7 @@ batchStoreSccResultsToS3 <- function(dataBatch,
                                    ))
 
   ## log files that have been completed
-  log <- data.frame(filename = dataFileName, position = position, success = success)
+  log <- data.frame(filename = dataFileName, position = position, success = success, checksum = checksum)
   readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
 
   return(dataBatch)

@@ -233,6 +233,7 @@ validateCdmConfigFile <- function(cdmConfigPath, testConnection = TRUE, keyring 
     }
 
     if (testS3Rw) {
+      message("Testing AWS S3 read/write")
       object <- paste(Sys.getenv("AWS_OBJECT_KEY"), tempfile(fileext = ".csv"), sep = "/")
       tryCatch({
         aws.s3::s3write_using(mtcars,
