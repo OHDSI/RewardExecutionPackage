@@ -22,7 +22,7 @@
 createResultsZip <- function(config) {
   checkmate::assert_class(config, "CdmConfig")
   cdmInfo <- list(name = config$name, database = config$database, sourceId = config$sourceId)
-  writeLines(RJSONIO::toJSON(cdmInfo), file.path(config$export, "cdmInfo.json"))
+  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, "cdmInfo.json"))
   zipfilePath <- paste0(config$database, "RewardResults.zip")
   files <- file.path(config$export, list.files(config$export, pattern = "*.csv"))
   files <- c(files, file.path(config$export, "cdmInfo.json"))
@@ -30,6 +30,23 @@ createResultsZip <- function(config) {
   return(zipfilePath)
 }
 
+#' Create Results Manifest (s3)
+#' @description
+#' Create json manifest for results files to upload
+#' @param config        Reward config object
+#' @export
+createResultsManifest <- function(config) {
+  checkmate::assert_class(config, "CdmConfig")
+  checkmate::assert_true(config$useAwsS3Export)
+
+  manifest <- readr::read_csv(config$awsS3Log)
+
+  cdmInfo <- list(name = config$name,
+                  database = config$database,
+                  sourceId = config$sourceId,
+                  manifest = manifest)
+  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, "cdmInfo.json"))
+}
 
 #' Execute package
 #' @description
@@ -49,7 +66,12 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
   generateAtlasCohortSet(config, connection)
   computeSccResults(connection, config)
-  zipPath <- createResultsZip(config)
 
-  message("Create results object ", zipPath)
+  if (config$useAwsS3Export) {
+    manifest <- createResultsManifest(config)
+    message("Created s3 manifest object ", manifest)
+  } else {
+    zipPath <- createResultsZip(config)
+    message("Created results object ", zipPath)
+  }
 }

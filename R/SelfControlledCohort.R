@@ -55,7 +55,6 @@ getDefaultExposureIds <- function(connection, config) {
 getSccRiskWindowStats <- function(connection,
                                   config,
                                   analysisSettings,
-                                  analysisId,
                                   exposureIds = getDefaultExposureIds(connection, config),
                                   outcomeIds = getDefaultOutcomeIds(connection, config)) {
 
@@ -109,7 +108,7 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                  "timeToOutcomeDistributionExposed",
                  "timeToOutcomeDistributionUnexposed")
 
-  dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId, ".csv"))
+  dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId, ".csv.gz"))
   for (statType in statTypes) {
     data <- tarStats[[statType]]
     if (nrow(data) > 0) {
@@ -130,7 +129,7 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
 
     if (config$useAwsS3Export) {
       dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId,
-                                                          "stat-", statType, ".csv"))
+                                                          "stat-", statType, ".csv.gz"))
 
       checksum <- digest::digest(data, "sha1")
       success <- aws.s3::s3write_using(data,
@@ -138,16 +137,17 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                                        object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
                                        na = "",
                                        append = FALSE,
+                                       bucket = Sys.getenv("AWS_BUCKET_NAME"),
                                        opts = list(
                                          check_region = FALSE,
                                          headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE")),
-                                         bucket = Sys.getenv("AWS_BUCKET_NAME")
+                                         multipart = TRUE
                                        ))
 
       log <- data.frame(filename = dataFileName, position = statType, success = success, checksum = checksum)
       readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
     } else {
-      vroom::vroom_write(data, dataFileName, delim = ",", na = "", append = append)
+      readr::write_csv(data, dataFileName, na = "", append = append)
       append <- TRUE
     }
 
@@ -159,9 +159,9 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
 #' @export
 getDefaultSccDataFileName <- function(config, analysisId, position = NULL) {
   if (is.null(position))
-    return(file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv")))
+    return(file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, ".csv.gz")))
 
-  return(file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, "pos-", position, ".csv")))
+  return(file.path(config$exportPath, paste0("scc-results-", config$database, "-aid-", analysisId, "pos-", position, ".csv.gz")))
 }
 
 # Export analysis results to a csv file in batches (assumes the data set is large)
@@ -176,7 +176,7 @@ batchStoreSccResults <- function(dataBatch,
   dataBatch <- cleanUpSccDf(dataBatch, config$sourceId, analysisId)
 
   message("Saving results ", dataFileName, " position ", position)
-  vroom::vroom_write(dataBatch, dataFileName, delim = ",", na = "", append = position != 1)
+  readr::write_csv(dataBatch, dataFileName, na = "", append = position != 1)
   return(dataBatch)
 }
 
@@ -194,15 +194,16 @@ batchStoreSccResultsToS3 <- function(dataBatch,
 
   message("Saving results ", dataFileName, " position ", position, " to aws.s3")
   checksum <- digest::digest(dataBatch, "sha1")
+  # NOTE - a multipart upload would be better here
   success <- aws.s3::s3write_using(dataBatch,
                                    readr::write_csv,
                                    object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
                                    na = "",
                                    append = FALSE,
+                                   bucket = Sys.getenv("AWS_BUCKET_NAME"),
                                    opts = list(
                                      check_region = FALSE,
-                                     headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE")),
-                                     bucket = Sys.getenv("AWS_BUCKET_NAME")
+                                     headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE"))
                                    ))
 
   ## log files that have been completed
@@ -327,7 +328,7 @@ computeSccResults <- function(connection,
     batchStoreArgs <- list(config = config, analysisId = analysisId)
     message(paste("Generating scc results with setting id", analysisId))
     analysisSettings <- analysis$options
-    tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, analysisId, targetCohortIds, outcomeCohortIds)
+    tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, targetCohortIds, outcomeCohortIds)
     exportSccTarStats(tarStats, config, analysisId)
     runScc(connection = connection,
            config = config,
