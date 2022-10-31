@@ -132,19 +132,21 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                                                           "stat-", statType, ".csv.gz"))
 
       checksum <- digest::digest(data, "sha1")
+      object <- paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/")
+      bucket <- Sys.getenv("AWS_BUCKET_NAME")
       success <- aws.s3::s3write_using(data,
                                        readr::write_csv,
-                                       object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
+                                       object = object,
                                        na = "",
                                        append = FALSE,
-                                       bucket = Sys.getenv("AWS_BUCKET_NAME"),
+                                       bucket = bucket,
                                        opts = list(
                                          check_region = FALSE,
                                          headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE")),
                                          multipart = TRUE
                                        ))
 
-      log <- data.frame(filename = dataFileName, position = statType, success = success, checksum = checksum)
+      log <- data.frame(object = object, bucket = bucket, position = statType, success = success, checksum = checksum)
       readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
     } else {
       readr::write_csv(data, dataFileName, na = "", append = append)
@@ -194,20 +196,22 @@ batchStoreSccResultsToS3 <- function(dataBatch,
 
   message("Saving results ", dataFileName, " position ", position, " to aws.s3")
   checksum <- digest::digest(dataBatch, "sha1")
+  object <- paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/")
+  bucket <- Sys.getenv("AWS_BUCKET_NAME")
   # NOTE - a multipart upload would be better here
   success <- aws.s3::s3write_using(dataBatch,
                                    readr::write_csv,
-                                   object = paste(Sys.getenv("AWS_OBJECT_KEY"), dataFileName, sep = "/"),
+                                   object = object,
                                    na = "",
                                    append = FALSE,
-                                   bucket = Sys.getenv("AWS_BUCKET_NAME"),
+                                   bucket = bucket,
                                    opts = list(
                                      check_region = FALSE,
                                      headers = list(`x-amz-server-side-encryption` = Sys.getenv("AWS_SSE_TYPE"))
                                    ))
 
   ## log files that have been completed
-  log <- data.frame(filename = dataFileName, position = position, success = success, checksum = checksum)
+  log <- data.frame(object = object, bucket = bucket, position = position, success = success, checksum = checksum)
   readr::write_csv(log, file = config$awsS3Log, append = !file.exists(config$aws3storeLog))
 
   return(dataBatch)
