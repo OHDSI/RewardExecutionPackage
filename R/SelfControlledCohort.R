@@ -146,7 +146,12 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
                                          multipart = TRUE
                                        ))
 
-      log <- data.frame(object = object, bucket = bucket, position = statType, success = success, checksum = checksum)
+      log <- data.frame(object = object,
+                        bucket = bucket,
+                        position = statType,
+                        target = "scc_stat",
+                        success = success,
+                        checksum = checksum)
       readr::write_csv(log, file = config$awsS3Log, append = file.exists(config$awsS3Log))
     } else {
       readr::write_csv(data, dataFileName, na = "", append = append)
@@ -211,7 +216,12 @@ batchStoreSccResultsToS3 <- function(dataBatch,
                                    ))
 
   ## log files that have been completed
-  log <- data.frame(object = object, bucket = bucket, position = position, success = success, checksum = checksum)
+  log <- data.frame(object = object,
+                    bucket = bucket,
+                    position = position,
+                    success = success,
+                    target = "scc_result",
+                    checksum = checksum)
   readr::write_csv(log, file = config$awsS3Log, append = file.exists(config$awsS3Log))
 
   return(dataBatch)
