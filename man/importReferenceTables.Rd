@@ -4,7 +4,12 @@
 \alias{importReferenceTables}
 \title{Import reference tables}
 \usage{
-importReferenceTables(connection, cdmConfig, zipFilePath)
+importReferenceTables(
+  connection,
+  cdmConfig,
+  zipFilePath,
+  overwriteReferences = FALSE
+)
 }
 \arguments{
 \item{connection}{DatabaseConnector connection}

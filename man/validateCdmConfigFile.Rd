@@ -4,7 +4,12 @@
 \alias{validateCdmConfigFile}
 \title{Validate a cdm configuration file}
 \usage{
-validateCdmConfigFile(cdmConfigPath, testConnection = TRUE, keyring = NULL)
+validateCdmConfigFile(
+  cdmConfigPath,
+  testConnection = TRUE,
+  keyring = NULL,
+  testS3Rw = TRUE
+)
 }
 \arguments{
 \item{cdmConfigPath}{path to cdm configuration file}
@@ -13,6 +18,8 @@ validateCdmConfigFile(cdmConfigPath, testConnection = TRUE, keyring = NULL)
 
 \item{keyring}{keyring::keyring. For systems that support multiple keyrings, specify the name of the keyring to use here.
 If NULL, then the default keyring is used.}
+
+\item{testS3Rw}{If useAwsS3Export is set to true, test reding and writing of objects to s3}
 }
 \description{
 Opens a file for editing that contains the default settings for a cdm

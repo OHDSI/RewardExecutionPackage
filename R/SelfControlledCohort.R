@@ -149,8 +149,8 @@ exportSccTarStats <- function(tarStats, config, analysisId) {
       log <- data.frame(object = object,
                         bucket = bucket,
                         position = statType,
-                        target = "scc_stat",
                         success = success,
+                        target = "scc_stat",
                         checksum = checksum)
       readr::write_csv(log, file = config$awsS3Log, append = file.exists(config$awsS3Log))
     } else {
