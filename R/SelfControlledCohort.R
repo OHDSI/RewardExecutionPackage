@@ -326,7 +326,6 @@ getSccSettings <- function(connection, config, analysisIds = NULL) {
 #' @param targetCohortIds - vector of exposure cohort ids or NULL
 #' @param .generateCohortStats - generate time on treatment and time to outcome stats or not
 #'
-#' @importFrom vroom vroom_write
 #' @export
 computeSccResults <- function(connection,
                               config,

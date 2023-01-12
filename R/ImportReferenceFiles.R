@@ -25,10 +25,6 @@ CONST_META_FILE_NAME <- "reward-meta-info.json"
 #' @param unzipPath                 path to create
 #' @param overwrite                 overwrite any existing files
 #'
-#' @import ParallelLogger
-#' @importFrom utils unzip
-#' @importFrom jsonlite read_json
-#' @importFrom tools md5sum file_path_as_absolute
 unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
   message("Inflating zip archive")
   if (!dir.exists(unzipPath)) {

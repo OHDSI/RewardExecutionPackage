@@ -18,7 +18,6 @@
 #' @aliases
 #' NULL RewardExecutionPackage-package
 #'
-#' @importFrom utils packageName
 #' @import dplyr
 #' @import ParallelLogger
 #' @import checkmate
