@@ -287,7 +287,8 @@ cleanUpSccDf <- function(data, sourceId, analysisId) {
                   "ub_95" = "irrUb95",
                   "p_value" = "p",
                   "num_exposures" = "numExposures") %>%
-    dplyr::filter(rr > 0, !is.null(rr), !is.na(rr))
+    dplyr::filter(rr > 0, !is.null(rr), !is.na(rr)) %>%
+    dplyr::distinct()
   return(data)
 }
 
