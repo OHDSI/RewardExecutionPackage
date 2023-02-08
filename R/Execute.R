@@ -45,7 +45,7 @@ createResultsManifest <- function(config) {
                   database = config$database,
                   sourceId = config$sourceId,
                   manifest = manifest)
-  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, "cdmInfo.json"))
+  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, paste(config$database, "-cdmInfo.json")))
 }
 
 #' Execute package
