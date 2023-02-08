@@ -56,8 +56,9 @@ createResultsManifest <- function(config) {
 #' @inheritParams loadCdmConfiguration
 #' @param referenceZipFile                  Path to rewardb cohort references zip file
 #' @param deleteExistingCohorts             If results for cohorts already exist, delete and start again?
+#' @param analysisIds                       optionally only run certain analysis types
 #' @export
-execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FALSE) {
+execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FALSE, analysisIds = NULL) {
   config <- loadCdmConfiguration(cdmConfigPath)
   connection <- DatabaseConnector::connect(config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
@@ -65,7 +66,7 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
   importReferenceTables(connection, config, referenceZipFile)
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
   generateAtlasCohortSet(config, connection)
-  computeSccResults(connection, config)
+  computeSccResults(connection, config, analysisIds = analysisIds)
 
   if (config$useAwsS3Export) {
     manifest <- createResultsManifest(config)
