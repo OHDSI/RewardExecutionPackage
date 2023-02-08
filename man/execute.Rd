@@ -4,7 +4,12 @@
 \alias{execute}
 \title{Execute package}
 \usage{
-execute(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FALSE)
+execute(
+  cdmConfigPath,
+  referenceZipFile,
+  deleteExistingCohorts = FALSE,
+  analysisIds = NULL
+)
 }
 \arguments{
 \item{cdmConfigPath}{path to cdm configuration file}
@@ -12,6 +17,8 @@ execute(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FALSE)
 \item{referenceZipFile}{Path to rewardb cohort references zip file}
 
 \item{deleteExistingCohorts}{If results for cohorts already exist, delete and start again?}
+
+\item{analysisIds}{optionally only run certain analysis types}
 }
 \description{
 Upload cohorts and references

@@ -20,8 +20,6 @@ computeSccResults(
 \item{outcomeCohortIds}{- vector of outcome cohort ids or NULL}
 
 \item{targetCohortIds}{- vector of exposure cohort ids or NULL}
-
-\item{.generateCohortStats}{- generate time on treatment and time to outcome stats or not}
 }
 \description{
 Get zip files for scc

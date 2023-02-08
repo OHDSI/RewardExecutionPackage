@@ -67,12 +67,4 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
   generateAtlasCohortSet(config, connection)
   computeSccResults(connection, config, analysisIds = analysisIds)
-
-  if (config$useAwsS3Export) {
-    manifest <- createResultsManifest(config)
-    message("Created s3 manifest object ", manifest)
-  } else {
-    zipPath <- createResultsZip(config)
-    message("Created results object ", zipPath)
-  }
 }

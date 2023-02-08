@@ -324,7 +324,6 @@ getSccSettings <- function(connection, config, analysisIds = NULL) {
 #' @param connection DatabaseConnector connection
 #' @param outcomeCohortIds - vector of outcome cohort ids or NULL
 #' @param targetCohortIds - vector of exposure cohort ids or NULL
-#' @param .generateCohortStats - generate time on treatment and time to outcome stats or not
 #'
 #' @export
 computeSccResults <- function(connection,
@@ -354,4 +353,12 @@ computeSccResults <- function(connection,
            exposureIds = targetCohortIds,
            outcomeIds = outcomeCohortIds)
   })
+
+  if (config$useAwsS3Export) {
+    manifest <- createResultsManifest(config)
+    message("Created s3 manifest object ", manifest)
+  } else {
+    zipPath <- createResultsZip(config)
+    message("Created results object ", zipPath)
+  }
 }
