@@ -64,8 +64,9 @@ getSccRiskWindowStats <- function(connection,
                                           cdmDatabaseSchema = config$cdmSchema,
                                           exposureIds = exposureIds,
                                           resultsDatabaseSchema = config$resultSchema,
+                                          exposureDatabaseSchema = config$resultSchema,
                                           riskWindowsTable = config$tables$sccRiskWindows,
-                                          exposureTable = config$table$cohort,
+                                          exposureTable = config$tables$cohort,
                                           firstExposureOnly = analysisSettings$firstExposureOnly,
                                           minAge = analysisSettings$minAge,
                                           maxAge = analysisSettings$maxAge,
@@ -324,11 +325,13 @@ getSccSettings <- function(connection, config, analysisIds = NULL) {
 #' @param connection DatabaseConnector connection
 #' @param outcomeCohortIds - vector of outcome cohort ids or NULL
 #' @param targetCohortIds - vector of exposure cohort ids or NULL
+#' @param studyName - optional string to name this study for result management
 #'
 #' @export
 computeSccResults <- function(connection,
                               config,
                               analysisIds = NULL,
+                              studyName = NULL,
                               outcomeCohortIds = getDefaultOutcomeIds(connection, config),
                               targetCohortIds = getDefaultExposureIds(connection, config)) {
   sccAnalysisSettings <- getSccSettings(connection, config, analysisIds = analysisIds)
@@ -355,10 +358,51 @@ computeSccResults <- function(connection,
   })
 
   if (config$useAwsS3Export) {
-    manifest <- createResultsManifest(config)
+    manifest <- createResultsManifest(config, studyName = studyName)
     message("Created s3 manifest object ", manifest)
   } else {
     zipPath <- createResultsZip(config)
+    message("Created results object ", zipPath)
+  }
+}
+
+#' @title
+#' Get Zipped or manifest Scc stat Results
+#' @description
+#' Get zip files for scc
+#' Partial reward execution with a subset of targets or outcomes. If both are null this will generate SCC results for all
+#' exposure and outcome pairs. This is only really useful if you're adding an cohort after the full result set has been
+#' generated.
+#' @param config cdm config loaded with loadCdmConfig function
+#' @param connection DatabaseConnector connection
+#' @param outcomeCohortIds - vector of outcome cohort ids or NULL
+#' @param targetCohortIds - vector of exposure cohort ids or NULL
+#' @param studyName - optional string to name this study for result management
+#' @export
+computeSccStats <- function(connection,
+                            config,
+                            analysisIds = NULL,
+                            studyName = NULL,
+                            outcomeCohortIds = getDefaultOutcomeIds(connection, config),
+                            targetCohortIds = getDefaultExposureIds(connection, config)) {
+  sccAnalysisSettings <- getSccSettings(connection, config, analysisIds = analysisIds)
+
+  apply(sccAnalysisSettings, 1, function(analysis) {
+    analysisId <- analysis$analysisId
+    if (!dir.exists(config$exportPath)) {
+      dir.create(config$exportPath)
+    }
+    message(paste("Generating scc results with setting id", analysisId))
+    analysisSettings <- analysis$options
+    tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, targetCohortIds, outcomeCohortIds)
+    exportSccTarStats(tarStats, config, analysisId)
+  })
+
+  if (config$useAwsS3Export) {
+    manifest <- createResultsManifest(config, studyName = studyName)
+    message("Created s3 manifest object ", manifest)
+  } else {
+    zipPath <- createResultsZip(config, studyName = studyName)
     message("Created results object ", zipPath)
   }
 }

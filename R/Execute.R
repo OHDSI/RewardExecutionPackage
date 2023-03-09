@@ -35,7 +35,7 @@ createResultsZip <- function(config) {
 #' Create json manifest for results files to upload
 #' @param config        Reward config object
 #' @export
-createResultsManifest <- function(config) {
+createResultsManifest <- function(config, studyName = NULL) {
   checkmate::assert_class(config, "CdmConfig")
   checkmate::assert_true(config$useAwsS3Export)
 
@@ -45,7 +45,7 @@ createResultsManifest <- function(config) {
                   database = config$database,
                   sourceId = config$sourceId,
                   manifest = manifest)
-  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, paste(config$database, "-cdmInfo.json")))
+  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, paste0(config$database, studyName, "-cdmInfo.json")))
 }
 
 #' Execute package
