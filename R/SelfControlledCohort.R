@@ -50,14 +50,17 @@ getDefaultExposureIds <- function(connection, config) {
 #' @param analysisSettings  Id of analysis
 #' @param analysisId     cdm configuration
 #' @param exposureIds     Outcomes to run for
-#' @param outcomeIds      Exposure to run for
 #' @export
-getSccRiskWindowStats <- function(connection,
-                                  config,
-                                  analysisSettings,
-                                  exposureIds = getDefaultExposureIds(connection, config),
-                                  outcomeIds = getDefaultOutcomeIds(connection, config)) {
+createSccRiskWindowTable <- function(connection,
+                                     config,
+                                     analysisSettings,
+                                     exposureIds = getDefaultExposureIds(connection, config),
+                                     analysisId = NULL) {
 
+
+  riskWindowsTable <- config$tables$sccRiskWindows
+  if(!is.null(analysisId))
+    riskWindowsTable <- paste0(riskWindowsTable, "_", analysisId)
 
   message(paste("Creating SCC risk windows on database ", config$database))
   SelfControlledCohort::runSccRiskWindows(connection,
@@ -65,7 +68,7 @@ getSccRiskWindowStats <- function(connection,
                                           exposureIds = exposureIds,
                                           resultsDatabaseSchema = config$resultSchema,
                                           exposureDatabaseSchema = config$resultSchema,
-                                          riskWindowsTable = config$tables$sccRiskWindows,
+                                          riskWindowsTable = riskWindowsTable,
                                           exposureTable = config$tables$cohort,
                                           firstExposureOnly = analysisSettings$firstExposureOnly,
                                           minAge = analysisSettings$minAge,
@@ -82,6 +85,24 @@ getSccRiskWindowStats <- function(connection,
                                           washoutPeriod = analysisSettings$washoutPeriod,
                                           followupPeriod = analysisSettings$followupPeriod)
 
+}
+
+
+#' Get Self controlled cohort risk windows
+#' @param connection DatabaseConnector connection
+#' @param config     cdm configuration
+#' @param analysisSettings  Id of analysis
+#' @param analysisId     cdm configuration
+#' @param outcomeIds      Exposure to run for
+#' @export
+getSccRiskWindowStats <- function(connection,
+                                  config,
+                                  analysisSettings,
+                                  outcomeIds = getDefaultOutcomeIds(connection, config),
+                                  analysisId = NULL) {
+  riskWindowsTable <- config$tables$sccRiskWindows
+  if(!is.null(analysisId))
+    riskWindowsTable <- paste0(riskWindowsTable, "_", analysisId)
   message(paste("Getting TAR statistics"))
   SelfControlledCohort::getSccRiskWindowStats(connection,
                                               outcomeDatabaseSchema = config$resultSchema,
@@ -101,21 +122,27 @@ getSccRiskWindowStats <- function(connection,
 #' "timeToOutcomeDistributionUnexposed"
 #' @param config cdm configuration  object
 #' @param analysisId id to mark output files with
+#' @param minMaxCohortId ids to mark output files with
 #' @export
-exportSccTarStats <- function(tarStats, config, analysisId) {
+exportSccTarStats <- function(tarStats, config, analysisId, minMaxCohortId = NULL) {
   append <- FALSE
   statTypes <- c("treatmentTimeDistribution",
                  "timeToOutcomeDistribution",
                  "timeToOutcomeDistributionExposed",
                  "timeToOutcomeDistributionUnexposed")
 
-  dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId, ".csv.gz"))
+  if (length(minMaxCohortId) == 2) {
+    dataFileName <- file.path(config$exportPath,
+                              paste0("time_at_risk_stats-", config$database, "-aid-", analysisId,  "-", minMaxCohortId[1], "-", minMaxCohortId[2], ".csv.gz"))
+  } else {
+    dataFileName <- file.path(config$exportPath, paste0("time_at_risk_stats-", config$database, "-aid-", analysisId, ".csv.gz"))
+  }
+
   for (statType in statTypes) {
     data <- tarStats[[statType]]
     if (nrow(data) > 0) {
       data$analysis_id <- as.integer(analysisId)
       data$source_id <- config$sourceId
-      message("Empty TAR stat data for analysis, ", analysisId)
     }
     data <- data %>%
       dplyr::rename("target_cohort_id" = "exposureId",
@@ -345,8 +372,6 @@ computeSccResults <- function(connection,
     batchStoreArgs <- list(config = config, analysisId = analysisId)
     message(paste("Generating scc results with setting id", analysisId))
     analysisSettings <- analysis$options
-    tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, targetCohortIds, outcomeCohortIds)
-    exportSccTarStats(tarStats, config, analysisId)
     runScc(connection = connection,
            config = config,
            analysisId = analysisId,
@@ -394,15 +419,22 @@ computeSccStats <- function(connection,
     }
     message(paste("Generating scc results with setting id", analysisId))
     analysisSettings <- analysis$options
-    tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, targetCohortIds, outcomeCohortIds)
-    exportSccTarStats(tarStats, config, analysisId)
+    createSccRiskWindowTable(connection, config, analysisSettings, targetCohortIds, analysisId = analysisId)
+    outcomeCohortIds <- sort(outcomeCohortIds)
+
+    # compute 1000 outcome cohorts at a time to minimize data batch sizes
+    groups <- split(outcomeCohortIds, ceiling(seq_along(outcomeCohortIds)/1000))
+    for (group in groups) {
+      tarStats <- getSccRiskWindowStats(connection, config, analysisSettings, group)
+      exportSccTarStats(tarStats, config, analysisId, minMaxCohortId = c(min(group), max(group)))
+    }
   })
 
   if (config$useAwsS3Export) {
-    manifest <- createResultsManifest(config, studyName = studyName)
+    manifest <- createResultsManifest(config, studyName = paste(studyName, "_tar_stat"))
     message("Created s3 manifest object ", manifest)
   } else {
-    zipPath <- createResultsZip(config, studyName = studyName)
+    zipPath <- createResultsZip(config, studyName = paste(studyName, "_tar_stat"))
     message("Created results object ", zipPath)
   }
 }

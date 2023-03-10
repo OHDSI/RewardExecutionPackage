@@ -19,10 +19,10 @@
 #' Create zip for results including CDM meta-data
 #' @param config        Reward config object
 #' @export
-createResultsZip <- function(config) {
+createResultsZip <- function(config, studyName = NULL) {
   checkmate::assert_class(config, "CdmConfig")
   cdmInfo <- list(name = config$name, database = config$database, sourceId = config$sourceId)
-  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, "cdmInfo.json"))
+  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, studyName, "cdmInfo.json"))
   zipfilePath <- paste0(config$database, "RewardResults.zip")
   files <- file.path(config$export, list.files(config$export, pattern = "*.csv"))
   files <- c(files, file.path(config$export, "cdmInfo.json"))
