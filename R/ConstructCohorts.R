@@ -56,12 +56,18 @@ createExposureCohorts <- function(connection, config) {
 #' Get Reward atlas cohort definitions
 #' @param config        CdmConfig object
 #' @export
-getAtlasCohortDefinitionSet <- function (config) {
-  CohortGenerator::getCohortDefinitionSet(settingsFileName = file.path(config$referencePath, "atlas_cohorts.csv"),
-                                          jsonFolder = file.path(config$referencePath, "cohorts"),
-                                          sqlFolder = file.path(config$referencePath, "sql"),
-                                          cohortFileNameFormat = "%s",
-                                          cohortFileNameValue = c("cohortId"))
+getAtlasCohortDefinitionSet <- function(config) {
+  cds <- CohortGenerator::getCohortDefinitionSet(settingsFileName = file.path(config$referencePath, "atlas_cohorts.csv"),
+                                                 jsonFolder = file.path(config$referencePath, "cohorts"),
+                                                 sqlFolder = file.path(config$referencePath, "sql"),
+                                                 cohortFileNameFormat = "%s",
+                                                 cohortFileNameValue = c("cohortId"))
+
+  if ("isSubset" %in% colnames(cds)) {
+    cds <- cds %>% dplyr::filter(!.data$isSubset)
+  }
+
+  return(cds)
 }
 
 #' Generate bulk cohorts with cohort generator
@@ -76,15 +82,21 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
                                       cohortDatabaseSchema = config$resultSchema,
                                       cohortTableNames = tableNames,
                                       incremental = TRUE)
+
   CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
-                                      connection = connection,
-                                      cdmDatabaseSchema = config$cdmSchema,
-                                      cohortDatabaseSchema = config$resultSchema,
-                                      cohortTableNames = tableNames,
-                                      cohortDefinitionSet = getAtlasCohortDefinitionSet(config),
-                                      stopOnError = FALSE,
-                                      incremental = TRUE,
-                                      incrementalFolder = file.path(config$referencePath, "incremental"))
+                                     connection = connection,
+                                     cdmDatabaseSchema = config$cdmSchema,
+                                     cohortDatabaseSchema = config$resultSchema,
+                                     cohortTableNames = tableNames,
+                                     cohortDefinitionSet = getAtlasCohortDefinitionSet(config),
+                                     stopOnError = FALSE,
+                                     incremental = TRUE,
+                                     incrementalFolder = file.path(config$referencePath, "incremental"))
+
+  # Load subset definitions and compute them
+  if (dir.exists(file.path(config$referencePath, "subset_definitions"))) {
+
+  }
 }
 
 createOutcomeCohorts <- function(connection, config) {

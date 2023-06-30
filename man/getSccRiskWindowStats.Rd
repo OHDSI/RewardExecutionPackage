@@ -8,8 +8,8 @@ getSccRiskWindowStats(
   connection,
   config,
   analysisSettings,
-  exposureIds = getDefaultExposureIds(connection, config),
-  outcomeIds = getDefaultOutcomeIds(connection, config)
+  outcomeIds = getDefaultOutcomeIds(connection, config),
+  analysisId = NULL
 )
 }
 \arguments{
@@ -18,8 +18,6 @@ getSccRiskWindowStats(
 \item{config}{cdm configuration}
 
 \item{analysisSettings}{Id of analysis}
-
-\item{exposureIds}{Outcomes to run for}
 
 \item{outcomeIds}{Exposure to run for}
 

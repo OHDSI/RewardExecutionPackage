@@ -10,7 +10,6 @@
 {DEFAULT @analysis_setting = 'analysis_setting'}
 {DEFAULT @include_constraints = FALSE}
 {DEFAULT @reference_version = 'reference_version'}
-{DEFAULT @copy_temp_table = FALSE}
 {DEFAULT @store_atlas_refs = FALSE}
 
 DROP TABLE IF EXISTS @schema.@reference_version;
@@ -18,14 +17,6 @@ create table @schema.@reference_version
 (
    reward_version_number varchar(100)
 );
-
-{@copy_temp_table} ? {
-SELECT
-    reward_version_number
-FROM #reference_version;
-TRUNCATE TABLE #reference_version;
-DROP TABLE #reference_version;
-}
 
 /* COHORT DEFINITION TABLE */
 DROP TABLE IF EXISTS @schema.@cohort_definition {@include_constraints} ? {cascade};
@@ -36,18 +27,6 @@ create table @schema.@cohort_definition
 	short_name varchar(1000),
 	concept_set_id bigint
 );
-
-{@copy_temp_table} ? {
-INSERT INTO @schema.@cohort_definition
-SELECT
-    CAST(cohort_definition_id AS bigint),
-    CAST(cohort_definition_name AS varchar(max)),
-    CAST(short_name AS varchar(max)),
-    CAST(concept_set_id AS bigint)
-FROM #cohort_definition;
-TRUNCATE TABLE #cohort_definition;
-DROP TABLE #cohort_definition;
-}
 
 /* Exposure cohort table*/
 DROP TABLE IF EXISTS @schema.@exposure_cohort {@include_constraints} ? {cascade};
@@ -64,17 +43,6 @@ create table @schema.@exposure_cohort (
     }
 );
 
-{@copy_temp_table} ? {
-INSERT INTO @schema.@exposure_cohort
-SELECT
-    CAST(cohort_definition_id AS bigint),
-    CAST(referent_concept_id AS bigint),
-    CAST(atc_flg AS int)
-FROM #exposure_cohort;
-TRUNCATE TABLE #exposure_cohort;
-DROP TABLE #exposure_cohort;
-}
-
 /* Outcome cohort table */
 DROP TABLE IF EXISTS @schema.@outcome_cohort {@include_constraints} ? {cascade};
 create table @schema.@outcome_cohort (
@@ -90,17 +58,6 @@ create table @schema.@outcome_cohort (
     }
 );
 
-{@copy_temp_table} ? {
-INSERT INTO @schema.@outcome_cohort
-SELECT
-    CAST(cohort_definition_id AS bigint),
-    CAST(referent_concept_id AS bigint),
-    CAST(outcome_type AS int)
-FROM #outcome_cohort;
-TRUNCATE TABLE #outcome_cohort;
-DROP TABLE #outcome_cohort;
-}
-
 /* arbitrarily group cohorts together by group */
 DROP TABLE IF EXISTS @schema.@cohort_group_definition {@include_constraints} ? {cascade};
 create table @schema.@cohort_group_definition (
@@ -115,18 +72,6 @@ create table @schema.@cohort_group_definition (
 
     }
 );
-
-{@copy_temp_table} ? {
-INSERT INTO @schema.@cohort_group_definition
-SELECT
-    CAST(cohort_group_definition_id AS INT),
-    CAST(cohort_group_parent_id AS INT),
-    CAST(group_name AS varchar(max))
-FROM #cohort_group_definition;
-TRUNCATE TABLE #cohort_group_definition;
-DROP TABLE #cohort_group_definition;
-}
-
 
 DROP TABLE IF EXISTS @schema.@cohort_group {@include_constraints} ? {cascade};
 create table @schema.@cohort_group (
@@ -147,17 +92,6 @@ create table @schema.@cohort_group (
     }
 );
 
-{@copy_temp_table} ? {
-INSERT INTO @schema.@cohort_group
-SELECT
-    CAST(cohort_definition_id AS BIGINT),
-    CAST(cohort_group_definition_id AS INT),
-    CAST(levels_of_separation AS INT)
-FROM #cohort_group;
-TRUNCATE TABLE #cohort_group;
-DROP TABLE #cohort_group;
-}
-
 
 /* COHORT CONCEPT SET LINK TABLE */
 DROP TABLE IF EXISTS @schema.@concept_set_definition {@include_constraints} ? {cascade};
@@ -174,17 +108,6 @@ create table @schema.@concept_set_definition
 	        ON DELETE CASCADE
     }
 );
-
-{@copy_temp_table} ? {
-INSERT INTO @schema.@concept_set_definition
-SELECT
-    CAST(cohort_definition_id AS BIGINT),
-    CAST(concept_set_id AS BIGINT),
-    CAST(concept_set_name AS varchar(max))
-FROM #concept_set_definition;
-TRUNCATE TABLE #concept_set_definition;
-DROP TABLE #concept_set_definition;
-}
 
 DROP TABLE IF EXISTS @schema.@atlas_cohort_reference {@include_constraints} ? {cascade};
 CREATE TABLE @schema.@atlas_cohort_reference (
@@ -204,18 +127,6 @@ CREATE TABLE @schema.@atlas_cohort_reference (
 	        ON DELETE CASCADE
 	}
 );
-
-{@copy_temp_table} ? {
-INSERT INTO @schema.@atlas_cohort_reference
-SELECT
-    CAST(cohort_definition_id AS BIGINT),
-    CAST(ATLAS_ID AS BIGINT),
-    CAST(atlas_url AS varchar(1000))
-FROM #atlas_cohort_reference;
-TRUNCATE TABLE #atlas_cohort_reference;
-DROP TABLE #atlas_cohort_reference;
-}
-
 
 /* CONCEPT SET TABLE */
 DROP TABLE IF EXISTS @schema.@cohort_concept_set {@include_constraints} ? {cascade};
@@ -238,21 +149,6 @@ create table @schema.@cohort_concept_set
     }
 );
 
-{@copy_temp_table} ? {
-INSERT INTO @schema.@cohort_concept_set
-SELECT
-    CAST(COHORT_DEFINITION_ID AS BIGINT),
-	CAST(concept_set_id AS bigint),
-	CAST(concept_id AS bigint),
-	CAST(concept_name AS varchar(max)),
-	CAST(is_excluded AS INT),
-	CAST(include_descendants AS INT),
-	CAST(include_mapped AS INT)
-FROM #cohort_concept_set;
-TRUNCATE TABLE #cohort_concept_set;
-DROP TABLE #cohort_concept_set;
-}
-
 DROP TABLE IF EXISTS @schema.@analysis_setting {@include_constraints} ? {cascade};
 CREATE TABLE @schema.@analysis_setting (
     analysis_id INT {@include_constraints} ? {PRIMARY KEY},
@@ -262,15 +158,3 @@ CREATE TABLE @schema.@analysis_setting (
     options TEXT -- JSON stored as base64 encoded string
 );
 
-{@copy_temp_table} ? {
-INSERT INTO @schema.@analysis_setting
-SELECT
-    CAST(analysis_id AS INT),
-	CAST(type_id AS VARCHAR(5)),
-	CAST(analysis_name AS varchar(255)),
-	CAST(description AS TEXT),
-	CAST(options AS TEXT)
-FROM #analysis_setting;
-TRUNCATE TABLE #analysis_setting;
-DROP TABLE #analysis_setting;
-}

@@ -4,7 +4,7 @@
 \alias{createResultsZip}
 \title{Create Results Zip}
 \usage{
-createResultsZip(config)
+createResultsZip(config, studyName = NULL)
 }
 \arguments{
 \item{config}{Reward config object}

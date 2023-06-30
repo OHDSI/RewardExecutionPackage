@@ -1,7 +1,7 @@
 Package: RewardExecutionPackage
 Type: Package
 Title: REWARD Execution Package
-Version: 0.1.0
+Version: 0.2.0
 Author: Jamie Gilbert
 Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
 Depends:
@@ -13,12 +13,13 @@ Imports:
     SqlRender,
     yaml,
     SelfControlledCohort (>= 1.6.0),
+    ResultModelManager,
     keyring,
     tools,
     checkmate,
     vroom,
     dplyr,
-    CohortGenerator,
+    CohortGenerator (>= 0.8.0),
     R.utils
 Suggests:
     testthat,
@@ -27,6 +28,7 @@ Suggests:
     targets
 Remotes:
     OHDSI/SelfControlledCohort,
+    OHDSI/ResultModelManager,
     OHDSI/CohortGenerator,
     OHDSI/Eunomia
 Description: Study execution package for generating REWARD results.
@@ -35,4 +37,4 @@ Description: Study execution package for generating REWARD results.
 License: Apache
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3

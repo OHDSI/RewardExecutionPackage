@@ -4,7 +4,7 @@
 \alias{exportSccTarStats}
 \title{Clean up and export time at risk stats}
 \usage{
-exportSccTarStats(tarStats, config, analysisId)
+exportSccTarStats(tarStats, config, analysisId, minMaxCohortId = NULL)
 }
 \arguments{
 \item{tarStats}{object returned by SelfControlledCohort getSccRiskWindowStats}
@@ -12,6 +12,8 @@ exportSccTarStats(tarStats, config, analysisId)
 \item{config}{cdm configuration  object}
 
 \item{analysisId}{id to mark output files with}
+
+\item{minMaxCohortId}{ids to mark output files with}
 
 \item{statType}{string - one of "treatmentTimeDistribution", "timeToOutcomeDistribution","timeToOutcomeDistributionExposed",
 "timeToOutcomeDistributionUnexposed"}

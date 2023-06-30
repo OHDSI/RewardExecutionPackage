@@ -652,10 +652,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "0.14.0",
-      "Source": "Repository",
+      "Version": "0.17.3",
+      "OS_type": NA,
       "Repository": "CRAN",
-      "Hash": "30e5eba91b67f7f4d75d31de14bbfbdc"
+      "Source": "Repository"
     },
     "rlang": {
       "Package": "rlang",

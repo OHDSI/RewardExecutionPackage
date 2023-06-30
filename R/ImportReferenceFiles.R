@@ -104,8 +104,25 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteR
     cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
     cohort_group = cdmConfig$tables$cohortGroup,
     analysis_setting = cdmConfig$tables$analysisSetting,
-    include_constraints = cdmConfig$includeConstraints,
-    copy_temp_table = TRUE
+    include_constraints = cdmConfig$includeConstraints
+  )
+  DatabaseConnector::executeSql(connection, sql)
+
+  migrateDatabaseModel(cdmConfig)
+
+  sql <- SqlRender::loadRenderTranslateSql(
+    file.path("create", "copyTempTables.sql"),
+    package = utils::packageName(),
+    dbms = connection@dbms,
+    schema = cdmConfig$referenceSchema,
+    concept_set_definition = cdmConfig$tables$conceptSetDefinition,
+    cohort_concept_set = cdmConfig$tables$cohortConceptSet,
+    cohort_definition = cdmConfig$tables$cohortDefinition,
+    atlas_cohort_reference = cdmConfig$tables$atlasCohortReference,
+    cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
+    cohort_group = cdmConfig$tables$cohortGroup,
+    analysis_setting = cdmConfig$tables$analysisSetting,
+    include_constraints = cdmConfig$includeConstraints
   )
   DatabaseConnector::executeSql(connection, sql)
 }

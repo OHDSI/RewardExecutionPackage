@@ -22,7 +22,14 @@
 createResultsZip <- function(config, studyName = NULL) {
   checkmate::assert_class(config, "CdmConfig")
   cdmInfo <- list(name = config$name, database = config$database, sourceId = config$sourceId)
-  ParallelLogger::saveSettingsToJson(cdmInfo, file.path(config$export, studyName, "cdmInfo.json"))
+
+  if (is.null(studyName)) {
+    fp <- file.path(config$export, "cdmInfo.json")
+  } else {
+    file.path(config$export, studyName, "cdmInfo.json")
+  }
+
+  ParallelLogger::saveSettingsToJson(cdmInfo, fp)
   zipfilePath <- paste0(config$database, "RewardResults.zip")
   files <- file.path(config$export, list.files(config$export, pattern = "*.csv"))
   files <- c(files, file.path(config$export, "cdmInfo.json"))
