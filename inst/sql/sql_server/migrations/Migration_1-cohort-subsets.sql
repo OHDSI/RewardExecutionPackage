@@ -12,7 +12,7 @@ CREATE TABLE @database_schema.@table_prefix@cohort_subset_definition (
 
 CREATE TABLE @database_schema.@table_prefix@cohort_subset_target (
     subset_definition_id integer primary key,
-    cohort_defintion_id bigint NOT NULL
+    cohort_definition_id bigint NOT NULL
     {@include_constraints} ? {
     ,
     CONSTRAINT subset_target_def
