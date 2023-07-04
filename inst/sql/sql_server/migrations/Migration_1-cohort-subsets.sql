@@ -12,7 +12,8 @@ CREATE TABLE @database_schema.@table_prefix@cohort_subset_definition (
 
 CREATE TABLE @database_schema.@table_prefix@cohort_subset_target (
     subset_definition_id integer primary key,
-    cohort_definition_id bigint NOT NULL
+    cohort_definition_id bigint NOT NULL, -- ID of target
+    subset_cohort_definition_id bigint NOT NULL
     {@include_constraints} ? {
     ,
     CONSTRAINT subset_target_def
@@ -22,6 +23,11 @@ CREATE TABLE @database_schema.@table_prefix@cohort_subset_target (
 
     CONSTRAINT cohort_defintion_id
       FOREIGN KEY(COHORT_DEFINITION_ID)
+	    REFERENCES @database_schema.@cohort_definition(COHORT_DEFINITION_ID)
+	        ON DELETE CASCADE,
+
+	 CONSTRAINT subset_cohort_definition_id
+      FOREIGN KEY(subset_cohort_definition_id)
 	    REFERENCES @database_schema.@cohort_definition(COHORT_DEFINITION_ID)
 	        ON DELETE CASCADE
     }

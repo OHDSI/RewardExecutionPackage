@@ -60,11 +60,14 @@ getAtlasCohortDefinitionSet <- function(config) {
   cds <- CohortGenerator::getCohortDefinitionSet(settingsFileName = file.path(config$referencePath, "atlas_cohorts.csv"),
                                                  jsonFolder = file.path(config$referencePath, "cohorts"),
                                                  sqlFolder = file.path(config$referencePath, "sql"),
+                                                 subsetJsonFolder = NULL,
                                                  cohortFileNameFormat = "%s",
                                                  cohortFileNameValue = c("cohortId"))
 
   if ("isSubset" %in% colnames(cds)) {
-    cds <- cds %>% dplyr::filter(!.data$isSubset)
+    cds <- cds %>%
+      dplyr::filter(!.data$isSubset) %>%
+      dplyr::select(-"isSubset", -"subsetParent")
   }
 
   return(cds)
@@ -83,19 +86,61 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
                                       cohortTableNames = tableNames,
                                       incremental = TRUE)
 
+  cohortDefinitionSet <- getAtlasCohortDefinitionSet(config)
   CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
                                      connection = connection,
                                      cdmDatabaseSchema = config$cdmSchema,
                                      cohortDatabaseSchema = config$resultSchema,
                                      cohortTableNames = tableNames,
-                                     cohortDefinitionSet = getAtlasCohortDefinitionSet(config),
+                                     cohortDefinitionSet = cohortDefinitionSet,
                                      stopOnError = FALSE,
                                      incremental = TRUE,
                                      incrementalFolder = file.path(config$referencePath, "incremental"))
 
   # Load subset definitions and compute them
   if (dir.exists(file.path(config$referencePath, "subset_definitions"))) {
+    # Load subset definitions
+    recordKeepingFile <- file.path(config$referencePath, "incremental", "GeneratedCohorts.csv")
 
+    sql <- "SELECT * FROM @schema.@subset_table"
+    subsetTargets <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
+                                                                schema = config$resultSchema,
+                                                                subset_table = config$tables$cohortSubsetTarget,
+                                                                snakeCaseToCamelCase = TRUE,
+                                                                sql = sql)
+
+    for (subsetDefId in unique(subsetTargets$subsetDefinitionId)) {
+      # Load definition json
+      jsonPath <- file.path(config$referencePath, "subset_definitions", paste0(subsetDefId, ".json"))
+      jsonDef <- SqlRender::readSql(jsonPath)
+      # Load definition from json representation
+      subsetDef <- CohortSubsetDefinition$new(jsonDef)
+      # Set id at runtime
+      subsetDef$definitionId <- subsetDefId
+
+      targetIds <- subsetTargets %>%
+        dplyr::filter(.data$subsetDefinitionId == subsetDefId) %>%
+        dplyr::select("cohortDefinitionId") %>%
+        dplyr::pull()
+
+      cohortDefinitionSet <- cohortDefinitionSet %>%
+        CohortGenerator::addCohortSubsetDefinition(subsetDef,
+                                                   targetCohortIds = targetIds)
+    }
+
+    # Generate only subset cohorts
+    for (cohortId in subsetCohorts$cohortId) {
+      CohortGenerator:::generateCohort(cohortId = cohortId,
+                                       cohortDefinitionSet,
+                                       connection = connection,
+                                       cdmDatabaseSchema = config$cdmSchema,
+                                       cohortDatabaseSchema = config$resultSchema,
+                                       tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
+                                       cohortTableNames = tableNames,
+                                       stopIfError = FALSE,
+                                       incremental = TRUE,
+                                       recordKeepingFile = recordKeepingFile)
+    }
   }
 }
 

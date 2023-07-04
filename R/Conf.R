@@ -29,7 +29,9 @@ CONST_REFERENCE_TABLES <- c(
   'atlas_cohort_reference',
   'cohort_concept_set',
   'analysis_setting',
-  'reference_version'
+  'reference_version',
+  'cohort_subset_definition',
+  'cohort_subset_target'
 )
 
 #' load cdm config object
