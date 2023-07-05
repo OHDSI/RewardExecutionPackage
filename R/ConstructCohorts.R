@@ -63,13 +63,6 @@ getAtlasCohortDefinitionSet <- function(config) {
                                                  subsetJsonFolder = NULL,
                                                  cohortFileNameFormat = "%s",
                                                  cohortFileNameValue = c("cohortId"))
-
-  if ("isSubset" %in% colnames(cds)) {
-    cds <- cds %>%
-      dplyr::filter(!.data$isSubset) %>%
-      dplyr::select(-"isSubset", -"subsetParent")
-  }
-
   return(cds)
 }
 
@@ -87,6 +80,17 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
                                       incremental = TRUE)
 
   cohortDefinitionSet <- getAtlasCohortDefinitionSet(config)
+
+  sql <- "SELECT * FROM @schema.@subset_table"
+  subsetTargets <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
+                                                              schema = config$resultSchema,
+                                                              subset_table = config$tables$cohortSubsetTarget,
+                                                              snakeCaseToCamelCase = TRUE,
+                                                              sql = sql)
+  # Remove subset cohort defs
+  cohortDefinitionSet <- cohortDefinitionSet %>%
+    dplyr::filter(!.data$cohortId %in% subsetTargets$subsetCohortDefinitionId)
+
   CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
                                      connection = connection,
                                      cdmDatabaseSchema = config$cdmSchema,
@@ -96,25 +100,30 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
                                      stopOnError = FALSE,
                                      incremental = TRUE,
                                      incrementalFolder = file.path(config$referencePath, "incremental"))
-
   # Load subset definitions and compute them
   if (dir.exists(file.path(config$referencePath, "subset_definitions"))) {
     # Load subset definitions
     recordKeepingFile <- file.path(config$referencePath, "incremental", "GeneratedCohorts.csv")
 
-    sql <- "SELECT * FROM @schema.@subset_table"
-    subsetTargets <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
-                                                                schema = config$resultSchema,
-                                                                subset_table = config$tables$cohortSubsetTarget,
-                                                                snakeCaseToCamelCase = TRUE,
-                                                                sql = sql)
 
+    .GlobalEnv$subsetTargets <- subsetTargets
     for (subsetDefId in unique(subsetTargets$subsetDefinitionId)) {
       # Load definition json
       jsonPath <- file.path(config$referencePath, "subset_definitions", paste0(subsetDefId, ".json"))
       jsonDef <- SqlRender::readSql(jsonPath)
       # Load definition from json representation
-      subsetDef <- CohortSubsetDefinition$new(jsonDef)
+      subsetDef <- CohortGenerator::CohortSubsetDefinition$new(jsonDef)
+
+      .GlobalEnv$.getSubsetCohortId <- function(targetId, definitionId) {
+        subsetTargets %>%
+          dplyr::filter(.data$cohortDefinitionId == targetId,
+                        .data$subsetDefinitionId == definitionId) %>%
+          dplyr::select("subsetCohortDefinitionId") %>%
+          dplyr::pull()
+      }
+
+      subsetDef$identifierExpression <- expression(.GlobalEnv$.getSubsetCohortId(targetId, definitionId))
+
       # Set id at runtime
       subsetDef$definitionId <- subsetDefId
 
@@ -123,13 +132,29 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
         dplyr::select("cohortDefinitionId") %>%
         dplyr::pull()
 
+      dummySet <- data.frame(
+        cohortId = targetIds,
+        json = "{}",
+        sql = "DUMMMY",
+        isSubset = FALSE,
+        subsetParent = targetIds
+      )
+
+      cohortDefinitionSet <- dplyr::bind_rows(cohortDefinitionSet, dummySet) %>% dplyr::distinct()
       cohortDefinitionSet <- cohortDefinitionSet %>%
         CohortGenerator::addCohortSubsetDefinition(subsetDef,
                                                    targetCohortIds = targetIds)
     }
 
+
+    sql <- "SELECT * FROM @schema.@cohort_table WHERE IS_SUBSET = 1"
+    subsetCohorts <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
+                                                                schema = config$resultSchema,
+                                                                cohort_table = config$tables$cohortDefinition,
+                                                                snakeCaseToCamelCase = TRUE,
+                                                                sql = sql)
     # Generate only subset cohorts
-    for (cohortId in subsetCohorts$cohortId) {
+    for (cohortId in subsetCohorts$cohortDefinitionId) {
       CohortGenerator:::generateCohort(cohortId = cohortId,
                                        cohortDefinitionSet,
                                        connection = connection,
@@ -138,7 +163,7 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
                                        tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
                                        cohortTableNames = tableNames,
                                        stopIfError = FALSE,
-                                       incremental = TRUE,
+                                       incremental = FALSE,
                                        recordKeepingFile = recordKeepingFile)
     }
   }

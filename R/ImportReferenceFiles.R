@@ -65,7 +65,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteR
   checkmate::assertFileExists(zipFilePath)
   metaFilePath <- file.path(cdmConfig$referencePath, CONST_META_FILE_NAME)
 
-  if (!file.exists(metaFilePath)) {
+  if (!file.exists(metaFilePath) || overwriteReferences) {
     unzipAndVerify(zipFilePath, cdmConfig$referencePath, overwriteReferences)
   }
 

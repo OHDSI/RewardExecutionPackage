@@ -8,6 +8,8 @@
 {DEFAULT @atlas_cohort_reference = 'atlas_cohort_reference'}
 {DEFAULT @cohort_concept_set = 'cohort_concept_set'}
 {DEFAULT @analysis_setting = 'analysis_setting'}
+{DEFAULT @cohort_subset_definition = 'cohort_subset_definition'}
+{DEFAULT @cohort_subset_target = 'cohort_subset_target'}
 {DEFAULT @include_constraints = FALSE}
 {DEFAULT @reference_version = 'reference_version'}
 {DEFAULT @copy_temp_table = FALSE}
@@ -110,3 +112,17 @@ FROM #atlas_cohort_reference;
 TRUNCATE TABLE #atlas_cohort_reference;
 DROP TABLE #atlas_cohort_reference;
 
+
+INSERT INTO @schema.@cohort_subset_definition
+SELECT
+ *
+FROM #cohort_subset_definition;
+TRUNCATE TABLE #cohort_subset_definition;
+DROP TABLE #cohort_subset_definition;
+
+INSERT INTO @schema.@cohort_subset_target
+SELECT
+ *
+FROM #cohort_subset_target;
+TRUNCATE TABLE #cohort_subset_target;
+DROP TABLE #cohort_subset_target;

@@ -4,6 +4,8 @@ test_that("Cohort construction works", {
   connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cfg$connectionDetails$server)
   connection <- DatabaseConnector::connect(connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
+  unlink(cdmConfig$referencePath)
+  on.exit(unlink(cdmConfig$referencePath))
   importReferenceTables(connection, cdmConfig, referenceZipPath)
 
   # Test all tables are present and populated
@@ -40,6 +42,10 @@ test_that("Cohort construction works", {
                                                       cohort_table = cdmConfig$tables$cohort)
 
   expect_true(count$CT[1] > 0)
+
+  generateAtlasCohortSet(cdmConfig, connection)
+
+
   computeSccResults(connection, cdmConfig)
   unlink("export", recursive = TRUE, force = TRUE)
 })
