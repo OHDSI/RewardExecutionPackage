@@ -115,7 +115,8 @@ DROP TABLE #atlas_cohort_reference;
 
 INSERT INTO @schema.@cohort_subset_definition
 SELECT
- *
+    subset_definition_id,
+    subset_name
 FROM #cohort_subset_definition;
 TRUNCATE TABLE #cohort_subset_definition;
 DROP TABLE #cohort_subset_definition;
