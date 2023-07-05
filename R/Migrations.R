@@ -4,7 +4,7 @@ RewardMigrationManager <- R6::R6Class(
   public = list(
     includeConstraints = FALSE,
     initialize = function(connectionDetails, ...) {
-      self$includeConstraints <- connectionDetails$dbms != "sqlite"
+      self$includeConstraints <- connectionDetails$dbms == "postgresql"
       super$initialize(connectionDetails = connectionDetails, ...)
     }
   ),
