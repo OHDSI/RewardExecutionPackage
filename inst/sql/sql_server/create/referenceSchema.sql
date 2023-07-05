@@ -10,7 +10,11 @@
 {DEFAULT @analysis_setting = 'analysis_setting'}
 {DEFAULT @include_constraints = FALSE}
 {DEFAULT @reference_version = 'reference_version'}
+{DEFAULT @migration = 'migration'}
 {DEFAULT @store_atlas_refs = FALSE}
+
+
+DROP TABLE IF EXISTS @schema.@migration;
 
 DROP TABLE IF EXISTS @schema.@reference_version;
 create table @schema.@reference_version
