@@ -69,6 +69,25 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteR
     unzipAndVerify(zipFilePath, cdmConfig$referencePath, overwriteReferences)
   }
 
+  message("Creating reference tables and copying temp data")
+  sql <- SqlRender::loadRenderTranslateSql(
+    file.path("create", "referenceSchema.sql"),
+    package = utils::packageName(),
+    dbms = connection@dbms,
+    schema = cdmConfig$referenceSchema,
+    concept_set_definition = cdmConfig$tables$conceptSetDefinition,
+    cohort_concept_set = cdmConfig$tables$cohortConceptSet,
+    cohort_definition = cdmConfig$tables$cohortDefinition,
+    atlas_cohort_reference = cdmConfig$tables$atlasCohortReference,
+    cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
+    cohort_group = cdmConfig$tables$cohortGroup,
+    analysis_setting = cdmConfig$tables$analysisSetting,
+    include_constraints = cdmConfig$includeConstraints
+  )
+  DatabaseConnector::executeSql(connection, sql)
+
+  migrateDatabaseModel(cdmConfig)
+
   fileList <- file.path(cdmConfig$referencePath, paste0(CONST_REFERENCE_TABLES, ".csv"))
   for (file in fileList) {
     camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
@@ -91,25 +110,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteR
     )
   }
 
-  message("Creating reference tables and copying temp data")
-  sql <- SqlRender::loadRenderTranslateSql(
-    file.path("create", "referenceSchema.sql"),
-    package = utils::packageName(),
-    dbms = connection@dbms,
-    schema = cdmConfig$referenceSchema,
-    concept_set_definition = cdmConfig$tables$conceptSetDefinition,
-    cohort_concept_set = cdmConfig$tables$cohortConceptSet,
-    cohort_definition = cdmConfig$tables$cohortDefinition,
-    atlas_cohort_reference = cdmConfig$tables$atlasCohortReference,
-    cohort_group_definition = cdmConfig$tables$cohortGroupDefinition,
-    cohort_group = cdmConfig$tables$cohortGroup,
-    analysis_setting = cdmConfig$tables$analysisSetting,
-    include_constraints = cdmConfig$includeConstraints
-  )
-  DatabaseConnector::executeSql(connection, sql)
-
-  migrateDatabaseModel(cdmConfig)
-
+  message("Copying temp tables")
   sql <- SqlRender::loadRenderTranslateSql(
     file.path("create", "copyTempTables.sql"),
     package = utils::packageName(),
