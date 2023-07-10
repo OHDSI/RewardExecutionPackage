@@ -283,8 +283,8 @@ runScc <- function(connection,
                postProcessFunction = postProcessFunction,
                postProcessArgs = postProcessArgs,
                resultsDatabaseSchema = config$resultSchema,
-               riskWindowsTable = config$tables$sccRiskWindows,
-               resultsTable = "scc_result",
+               #riskWindowsTable = config$tables$sccRiskWindows,
+               #resultsTable = "scc_result",
                returnEstimates = FALSE,
                computeTarDistribution = FALSE)
   args <- c(analysisSettings, opts)
