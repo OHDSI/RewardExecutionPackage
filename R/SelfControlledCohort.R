@@ -286,7 +286,7 @@ runScc <- function(connection,
                #riskWindowsTable = config$tables$sccRiskWindows,
                #resultsTable = "scc_result",
                returnEstimates = FALSE,
-               computeTarDistribution = FALSE)
+               computeTarDistribution = TRUE)
   args <- c(analysisSettings, opts)
   do.call(SelfControlledCohort::runSelfControlledCohort, args)
   message(paste("Completed SCC for", config$database))
