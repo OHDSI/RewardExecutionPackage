@@ -3,14 +3,14 @@
 {DEFAULT @cohort_subset_target = 'cohort_subset_target'}
 {DEFAULT @include_constraints = TRUE}
 
-DROP TABLE IF EXISTS @database_schema.@table_prefix@cohort_subset_definition;
+DROP TABLE IF EXISTS @database_schema.@table_prefix@cohort_subset_definition {@include_constraints} ? {cascade};
 CREATE TABLE @database_schema.@table_prefix@cohort_subset_definition (
     subset_definition_id integer primary key,
     subset_name varchar,
     json varchar
 );
 
-DROP TABLE IF EXISTS @database_schema.@table_prefix@cohort_subset_target;
+DROP TABLE IF EXISTS @database_schema.@table_prefix@cohort_subset_target {@include_constraints} ? {cascade};
 CREATE TABLE @database_schema.@table_prefix@cohort_subset_target (
     subset_definition_id integer primary key,
     cohort_definition_id bigint NOT NULL, -- ID of target
