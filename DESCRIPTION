@@ -20,13 +20,15 @@ Imports:
     vroom,
     dplyr,
     CohortGenerator (>= 0.8.0),
-    R.utils
+    R.utils,
+    CohortMethod
 Suggests:
     testthat,
     withr,
     Eunomia,
     targets
 Remotes:
+    OHDSI/CohortMethod,
     OHDSI/SelfControlledCohort,
     OHDSI/ResultModelManager,
     OHDSI/CohortGenerator,
