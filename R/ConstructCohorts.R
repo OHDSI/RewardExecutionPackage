@@ -74,7 +74,13 @@ getAtlasCohortDefinitionSet <- function(config) {
 #' @export
 generateAtlasCohortSet <- function(config, connection = NULL) {
   tableNames <- CohortGenerator::getCohortTableNames(config$tables$cohort)
-  CohortGenerator::createCohortTables(connectionDetails = config$connectionDetails,
+
+  if (is.null(connection)) {
+    connection <- DatabaseConnector::connect(config$connectionDetails)
+    on.exit(DatabaseConnector::disconnect(connection))
+  }
+
+  CohortGenerator::createCohortTables(connection = connection,
                                       cohortDatabaseSchema = config$resultSchema,
                                       cohortTableNames = tableNames,
                                       incremental = TRUE)
@@ -91,8 +97,7 @@ generateAtlasCohortSet <- function(config, connection = NULL) {
   cohortDefinitionSet <- cohortDefinitionSet %>%
     dplyr::filter(!.data$cohortId %in% subsetTargets$subsetCohortDefinitionId)
 
-  CohortGenerator::generateCohortSet(connectionDetails = config$connectionDetails,
-                                     connection = connection,
+  CohortGenerator::generateCohortSet(connection = connection,
                                      cdmDatabaseSchema = config$cdmSchema,
                                      cohortDatabaseSchema = config$resultSchema,
                                      cohortTableNames = tableNames,

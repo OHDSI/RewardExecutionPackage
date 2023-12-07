@@ -11,8 +11,6 @@ RewardMigrationManager <- R6::R6Class(
   private = list(
     executeMigration = function(migration) {
       private$logInfo("Executing migration: ", migration$migrationFile)
-      # Load, render, translate and execute sql
-
       sql <- SqlRender::loadRenderTranslateSql(file.path(self$migrationPath, migration$migrationFile),
                                                dbms = private$connectionDetails$dbms,
                                                database_schema = self$databaseSchema,
@@ -62,5 +60,6 @@ getMigrationManager <- function(config, schema = config$referenceSchema) {
 #' @param ... see getMigrationManager
 migrateDatabaseModel <- function(...) {
   manager <- getMigrationManager(...)
+  on.exit(manager$finalize())
   manager$executeMigrations()
 }

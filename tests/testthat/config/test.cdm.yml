@@ -16,8 +16,8 @@ referencePath: "reference_files"
 
 # A connection details object
 connectionDetails:
-  dbms: "sqlite"
-  server: "eunomia_test.sqlite"
+  dbms: "duckdb"
+  server: "eunomia_test.ddb"
 
 # use keyring package for storing database credentials
 useSecurePassword: False
@@ -28,20 +28,19 @@ keyringService: "reward_cdm"
 bulkUpload: True
 
 # Where cohort results are stored
-resultSchema: "main"
+resultSchema: "ref"
 # Where reference files are imported
-referenceSchema: "main"
+referenceSchema: "ref"
 # OMOP Common Data Model Schema
-cdmSchema: "main"
+cdmSchema: "cdm"
 # schema that contains OMOP vocabulary tables
-vocabularySchema: "main"
+vocabularySchema: "cdm"
 
 # Tables to be created and used by REWARD
 tables:
   sccResult: "scc_result"
   cohort: "cohort"
   sccRiskWindows: "scc_risk_windows"
-
   # Reference table definitions
   referenceVersion: "reference_version"
   cohortDefinition: "cohort_definition"

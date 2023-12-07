@@ -9,7 +9,7 @@ test_that("Check configuration file loads", {
                      "cdmSchema")
 
   config <- loadCdmConfiguration(cdmConfigPath)
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cfg$connectionDetails$server)
+  connectionDetails <- config$connectionDetails
   checkmate::expect_names(names(config), must.include = requiredNames)
   validateCdmConfigFile(cdmConfigPath)
 

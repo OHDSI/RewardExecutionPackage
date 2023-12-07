@@ -61,13 +61,16 @@ unzipAndVerify <- function(exportZipFilePath, unzipPath, overwrite) {
 #' @param cdmConfig                     cdmConfig object
 #' @param zipFilePath                   zip file path
 #' @export
-importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteReferences = FALSE) {
+importReferenceTables <- function(cdmConfig, zipFilePath, overwriteReferences = FALSE) {
   checkmate::assertFileExists(zipFilePath)
   metaFilePath <- file.path(cdmConfig$referencePath, CONST_META_FILE_NAME)
 
   if (!file.exists(metaFilePath) || overwriteReferences) {
     unzipAndVerify(zipFilePath, cdmConfig$referencePath, overwriteReferences)
   }
+
+  connection <- DatabaseConnector::connect(cdmConfig$connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
 
   message("Creating reference tables and copying temp data")
   sql <- SqlRender::loadRenderTranslateSql(
@@ -85,9 +88,11 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteR
     include_constraints = cdmConfig$includeConstraints
   )
   DatabaseConnector::executeSql(connection, sql)
+  DatabaseConnector::disconnect(connection)
 
   migrateDatabaseModel(cdmConfig)
 
+  connection <- DatabaseConnector::connect(cdmConfig$connectionDetails)
   fileList <- file.path(cdmConfig$referencePath, paste0(CONST_REFERENCE_TABLES, ".csv"))
   for (file in fileList) {
     camelName <- SqlRender::snakeCaseToCamelCase(strsplit(basename(file), ".csv")[[1]])
@@ -100,7 +105,7 @@ importReferenceTables <- function(connection, cdmConfig, zipFilePath, overwriteR
     # Create temp tables
     DatabaseConnector::insertTable(
       connection = connection,
-      tableName = paste0("#", tableName),
+      tableName = paste0("#t_", tableName),
       data = data,
       tempTable = TRUE,
       progressBar = TRUE,

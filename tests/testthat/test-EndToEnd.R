@@ -1,13 +1,13 @@
 test_that("Cohort construction works", {
-  unlink(cfg$connectionDetails$server)
   cdmConfig <- loadCdmConfiguration(cdmConfigPath)
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cfg$connectionDetails$server)
-  connection <- DatabaseConnector::connect(connectionDetails)
-  on.exit(DatabaseConnector::disconnect(connection))
   unlink(cdmConfig$referencePath)
   on.exit(unlink(cdmConfig$referencePath))
-  importReferenceTables(connection, cdmConfig, referenceZipPath)
+  importReferenceTables(cdmConfig, referenceZipPath)
 
+
+  connectionDetails <- cdmConfig$connectionDetails
+  connection <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
   # Test all tables are present and populated
   for (table in CONST_REFERENCE_TABLES) {
     sql <- "SELECT COUNT(*) as ct FROM @reference_schema.@table"

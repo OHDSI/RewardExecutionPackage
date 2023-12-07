@@ -70,7 +70,7 @@ execute <- function(cdmConfigPath, referenceZipFile, deleteExistingCohorts = FAL
   connection <- DatabaseConnector::connect(config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
 
-  importReferenceTables(connection, config, referenceZipFile)
+  importReferenceTables(config, referenceZipFile)
   createCohorts(connection, config, deleteExisting = deleteExistingCohorts)
   generateAtlasCohortSet(config, connection)
   computeSccResults(connection, config, analysisIds = analysisIds)

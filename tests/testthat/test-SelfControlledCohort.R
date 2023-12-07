@@ -1,9 +1,8 @@
 test_that("SelfControlledCohort works", {
-  unlink(cfg$connectionDetails$server)
   cdmConfig <- loadCdmConfiguration(cdmConfigPath)
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cfg$connectionDetails$server)
+  connectionDetails <- cdmConfig$connectionDetails
   connection <- DatabaseConnector::connect(connectionDetails)
-  importReferenceTables(connection, cdmConfig, referenceZipPath)
+  importReferenceTables(cdmConfig, referenceZipPath)
   createCohorts(connection, cdmConfig)
   computeSccResults(connection, cdmConfig)
 
