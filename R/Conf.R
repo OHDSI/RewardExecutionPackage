@@ -77,6 +77,12 @@ loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
     options("sqlRenderTempEmulationSchema" = config$sqlRenderTempEmulationSchema)
   }
 
+  if (is.null(config$workDir)) {
+    workDir <- paste0(config$database, "Work")
+    message("Setting work folder to", workDir)
+    config$workDir <- workDir
+  }
+
   class(config) <- "CdmConfig"
   return(config)
 }

@@ -5,20 +5,37 @@
 #' @export
 #' @param config        cdmConfiguration
 #' @param cmSettings    cohortMethod settings object to execute
-executeCohortMethodAnalysis <- function(config, cmSettings) {
-  multiThreadingSettings <- CohortMethod::createDefaultMultiThreadingSettings(parallel::detectCores())
-  cmSettings$connectionDetails <- config$connectionDetails
-  cmSettings$cdmDatabaseSchema <- config$cdmDatabaseSchema
-  cmSettings$exposureDatabaseSchema <- config$resultSchema
-  cmSettings$exposureTable <- config$tables$exposureCohort
-  cmSettings$outcomeDatabaseSchema <- config$resultSchema
-  cmSettings$outcomeTable <- config$outcomeCohort
-  cmSettings$outputFolder <- config$exportPath
-  cmSettings$multiThreadingSettings <- multiThreadingSettings
-  cmSettings$cmDiagnosticThresholds  <- NULL
-  do.call(CohortMethod::runCmAnalyses, args)
+executeCohortMethodAnalysis <- function(config, cmConfig) {
+  multiThreadingSettings <- CohortMethod::createDefaultMultiThreadingSettings(1)
 
-  CohortMethod::exportToCsv(outputFolder = cmSettings$outputFolder,
-                            databaseId = config$databaseId,
-                            maxCores = parallel::detectCores() - 1)
+  if (!dir.exists(config$workDir)) {
+    dir.create(config$workDir)
+  }
+
+  cmConfig$settings$connectionDetails <- config$connectionDetails
+  cmConfig$settings$cdmDatabaseSchema <- config$cdmSchema
+  cmConfig$settings$exposureDatabaseSchema <- config$resultSchema
+  cmConfig$settings$exposureTable <- config$tables$cohort
+  cmConfig$settings$outcomeDatabaseSchema <- config$resultSchema
+  cmConfig$settings$outcomeTable <- config$tables$cohort
+  cmConfig$settings$outputFolder <- file.path(config$workDir, "CohortMethodOutput")
+  cmConfig$settings$multiThreadingSettings <- multiThreadingSettings
+  cmConfig$settings$cmDiagnosticThresholds  <- NULL
+
+  do.call(CohortMethod::runCmAnalyses, cmConfig$settings)
+
+  tryCatch({
+    CohortMethod::exportToCsv(outputFolder = cmConfig$settings$outputFolder,
+                              exportFolder = config$exportPath,
+                              databaseId = config$sourceId,
+                              maxCores = parallel::detectCores() - 1)
+  }, error = function(err) {
+    if (grepl("java.lang.RuntimeException: java.io.FileNotFoundException", err$message)) {
+      zipName <- file.path(config$exportPath, sprintf("Results_%s.zip", config$sourceId))
+      utils::zip(zipName, files = list.files(config$exportPath, pattern = ".*\\.csv$", full.names = TRUE))
+    } else {
+      # Re-throw the error if it's not the one we're looking for
+      stop(err)
+    }
+  })
 }
