@@ -57,8 +57,8 @@ SELECT
     CAST(analysis_id AS INT),
 	CAST(type_id AS VARCHAR(5)),
 	CAST(analysis_name AS varchar(255)),
-	CAST(description AS TEXT),
-	CAST(options AS TEXT)
+	CAST(description AS varchar(max)),
+	CAST(options AS varchar(max))
 FROM #t_analysis_setting;
 TRUNCATE TABLE #t_analysis_setting;
 DROP TABLE #t_analysis_setting;

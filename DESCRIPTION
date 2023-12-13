@@ -14,7 +14,6 @@ Imports:
     yaml,
     SelfControlledCohort (>= 1.6.0),
     ResultModelManager,
-    keyring,
     tools,
     checkmate,
     vroom,
@@ -26,7 +25,8 @@ Suggests:
     testthat,
     withr,
     Eunomia,
-    targets
+    targets,
+    keyring
 Remotes:
     OHDSI/CohortMethod,
     OHDSI/SelfControlledCohort,

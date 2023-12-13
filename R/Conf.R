@@ -61,7 +61,7 @@ loadCdmConfiguration <- function(cdmConfigPath, keyring = NULL) {
 
   config$tables <- .setDefaultOptions(config$tables, defaultTables)
 
-  if (is.null(config$connectionDetails$user)) {
+  if (is.null(config$connectionDetails$user) && is.null(config$connectionDetails$connectionString)) {
     user <- Sys.getenv("REWARD_CDM_USER", Sys.info()[["user"]])
     config$connectionDetails$user <- user
   }

@@ -139,7 +139,6 @@ create table @schema.@cohort_concept_set
     COHORT_DEFINITION_ID bigint,
 	concept_set_id bigint,
 	concept_id bigint,
-	-- Stored because it can be used in shiny apps without requring full rxnorm/snomed vocab
 	concept_name varchar(max),
 	is_excluded INT,
 	include_descendants INT,
@@ -158,7 +157,7 @@ CREATE TABLE @schema.@analysis_setting (
     analysis_id INT {@include_constraints} ? {PRIMARY KEY},
     type_id VARCHAR(5),
     analysis_name VARCHAR(255),
-    description TEXT,
-    options TEXT -- JSON stored as base64 encoded string
+    description varchar(max),
+    options varchar(max) -- JSON stored as base64 encoded string
 );
 
