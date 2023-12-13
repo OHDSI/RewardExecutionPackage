@@ -157,7 +157,7 @@ CREATE TABLE @schema.@analysis_setting (
     analysis_id INT {@include_constraints} ? {PRIMARY KEY},
     type_id VARCHAR(5),
     analysis_name VARCHAR(255),
-    description TEXT,
-    options TEXT -- JSON stored as base64 encoded string
+    description varchar(max),
+    options varchar(max) -- JSON stored as base64 encoded string
 );
 
