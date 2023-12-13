@@ -139,7 +139,6 @@ create table @schema.@cohort_concept_set
     COHORT_DEFINITION_ID bigint,
 	concept_set_id bigint,
 	concept_id bigint,
-	-- Stored because it can be used in shiny apps without requring full rxnorm/snomed vocab
 	concept_name varchar(max),
 	is_excluded INT,
 	include_descendants INT,
