@@ -2,10 +2,10 @@ IF OBJECT_ID('tempdb..#concept_ancestor_grp', 'U') IS NOT NULL
 	DROP TABLE #concept_ancestor_grp;
 
 --HINT DISTRIBUTE_ON_KEY(descendant_concept_id)
-create table #concept_ancestor_grp as
 select
   ca1.ancestor_concept_id
   , ca1.descendant_concept_id
+into #concept_ancestor_grp
 from @cdm_database_schema.concept_ancestor ca1
 inner join
 (
