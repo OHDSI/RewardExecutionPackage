@@ -6,11 +6,19 @@
 #' @param config        cdmConfiguration
 #' @param cmSettings    cohortMethod settings object to execute
 executeCohortMethodAnalysis <- function(config, cmConfig) {
-  multiThreadingSettings <- CohortMethod::createDefaultMultiThreadingSettings(1)
+  multiThreadingSettings <- CohortMethod::createDefaultMultiThreadingSettings(12)
 
   if (!dir.exists(config$workDir)) {
     dir.create(config$workDir)
   }
+  connection <- DatabaseConnector::connect(config$connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
+  # Get outcome cohorts
+  cmConfig$settings <- createCmDesign(targetId = cmConfig$targetId,
+                                      comparatorId = cmConfig$comparatorId,
+                                      indicationId = cmConfig$indicationId,
+                                      outcomeCohortIds =  getAtlasOutcomeIds(connection, config),
+                                      excludedCovariateConceptIds = cmConfig$excludedCovariateConceptIds)
 
   cmConfig$settings$connectionDetails <- config$connectionDetails
   cmConfig$settings$cdmDatabaseSchema <- config$cdmSchema
