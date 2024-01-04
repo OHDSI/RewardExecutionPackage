@@ -4,7 +4,7 @@
 #' @param connection DatabaseConnector connection
 #' @param config     cdm configuration
 getAtlasOutcomeIds <- function(connection, config) {
-  sql <- "SELECT cohort_definition_id FROM @reference_schema.@outcome_cohort oc
+  sql <- "SELECT oc.cohort_definition_id FROM @reference_schema.@outcome_cohort oc
   INNER JOIN @reference_schema.@atlas_cohort_reference ar on oc.cohort_definition_id = ar.cohort_definition_id"
   DatabaseConnector::renderTranslateQuerySql(connection,
                                              sql,
