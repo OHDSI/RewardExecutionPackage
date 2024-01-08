@@ -223,7 +223,7 @@ createCmDesign <- function(targetId,
 #' @param config        cdmConfiguration
 #' @param cmSettings    cohortMethod settings object to execute
 executeCohortMethodAnalysis <- function(config, cmConfig) {
-  multiThreadingSettings <- CohortMethod::createDefaultMultiThreadingSettings(12)
+  multiThreadingSettings <- CohortMethod::createDefaultMultiThreadingSettings(parallel::detectCores() - 1)
 
   if (!dir.exists(config$workDir)) {
     dir.create(config$workDir)
