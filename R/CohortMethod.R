@@ -14,24 +14,6 @@ getAtlasOutcomeIds <- function(connection, config) {
                                              outcome_cohort = config$tables$outcomeCohort)$cohortDefinitionId
 }
 
-createCohortMethodModuleSpecifications <- function(cmAnalysisList,
-                                                   targetComparatorOutcomesList,
-                                                   analysesToExclude = NULL,
-                                                   refitPsForEveryOutcome = FALSE,
-                                                   refitPsForEveryStudyPopulation = TRUE,
-                                                   cmDiagnosticThresholds = createCmDiagnosticThresholds()) {
-  analysis <- list()
-  for (name in names(formals(createCohortMethodModuleSpecifications))) {
-    analysis[[name]] <- get(name)
-  }
-
-  specifications <- list(module = "RewardCohortMethodSettings",
-                         version = utils::packageVersion(utils::packageName()),
-                         settings = analysis)
-  class(specifications) <- c("CohortMethodModuleSpecifications", "ModuleSpecifications")
-  return(specifications)
-}
-
 createCmDesign <- function(targetId,
                            comparatorId,
                            indicationId,
@@ -195,7 +177,7 @@ createCmDesign <- function(targetId,
       fitOutcomeModelArgs = fitOutcomeModelArgs
     )
   }
-  cohortMethodModuleSpecifications <- createCohortMethodModuleSpecifications(
+  cohortMethodModuleSpecifications <- list(
     cmAnalysisList = cmAnalysisList,
     targetComparatorOutcomesList = targetComparatorOutcomesList,
     analysesToExclude = NULL,
@@ -235,7 +217,7 @@ executeCohortMethodAnalysis <- function(config, cmConfig) {
                              comparatorId = cmConfig$comparatorId,
                              indicationId = cmConfig$indicationId,
                              outcomeCohortIds = getAtlasOutcomeIds(connection, config),
-                             excludedCovariateConceptIds = cmConfig$excludedCovariateConceptIds)$settings
+                             excludedCovariateConceptIds = cmConfig$excludedCovariateConceptIds)
 
   settings$connectionDetails <- config$connectionDetails
   settings$cdmDatabaseSchema <- config$cdmSchema
