@@ -213,10 +213,13 @@ executeCohortMethodAnalysis <- function(config, cmConfig) {
   connection <- DatabaseConnector::connect(config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
 
+  if (is.null(cmConfig$outcomeCohortIds))
+    cmConfig$outcomeCohortIds <- getAtlasOutcomeIds(connection, config)
+
   settings <- createCmDesign(targetId = cmConfig$targetId,
                              comparatorId = cmConfig$comparatorId,
                              indicationId = cmConfig$indicationId,
-                             outcomeCohortIds = getAtlasOutcomeIds(connection, config),
+                             outcomeCohortIds = cmConfig$outcomeCohortIds,
                              excludedCovariateConceptIds = cmConfig$excludedCovariateConceptIds)
 
   settings$connectionDetails <- config$connectionDetails
