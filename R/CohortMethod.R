@@ -235,8 +235,8 @@ executeCohortMethodAnalysis <- function(config, cmConfig) {
   if (is.null(cmConfig$outcomeCohortIds))
     cmConfig$outcomeCohortIds <- getCmOutcomes(connection,
                                                config,
-                                               comparatorId = cmConfig$comparatorId,
-                                               comparatorCohortId = cmConfig$indicationId,
+                                               comparatorCohortId = cmConfig$comparatorId,
+                                               targetCohortId = cmConfig$targetId,
                                                minCaseCount = cmConfig$minCaseCount)
 
   settings <- createCmDesign(targetId = cmConfig$targetId,
