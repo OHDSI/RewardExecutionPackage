@@ -24,6 +24,7 @@ getCmOutcomes <- function(connection, config, targetCohortId, comparatorCohortId
                                            target_cohort_id = targetCohortId,
                                            comparator_cohort_id = comparatorCohortId,
                                            result_database_schema = config$referenceSchema)
+  browser()
   res <- DatabaseConnector::querySql(connection, sql, snakeCaseToCamelCase = TRUE)
 
   res <- res |> dplyr::filter(.data$targetCases > minCaseCount, .data$comparatorCases > minCaseCount)

@@ -1,6 +1,6 @@
 with base_pop as (
 
-	select * from @result_database_schema.cohort where cohort_definition_id in (@target_cohort_id, @outcome_cohort_id)
+	select * from @result_database_schema.cohort where cohort_definition_id in (@target_cohort_id, @comparator_cohort_id)
 
 ),
 
