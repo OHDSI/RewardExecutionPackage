@@ -14,12 +14,40 @@ getAtlasOutcomeIds <- function(connection, config) {
                                              outcome_cohort = config$tables$outcomeCohort)$cohortDefinitionId
 }
 
+
+#' get cm outcomes
+#' @export
+getCmOutcomes <- function(connection, config, targetCohortId, comparatorCohortId, minCaseCount = 100) {
+  sql <- SqlRender::loadRenderTranslateSql("cohorts/countTargetComparatorOutcomes.sql",
+                                           package = utils::packageName(),
+                                           dbms = connection@dbms,
+                                           target_cohort_id = targetCohortId,
+                                           comparator_cohort_id = comparatorCohortId,
+                                           result_database_schema = config$referenceSchema)
+  res <- DatabaseConnector::querySql(connection, sql, snakeCaseToCamelCase = TRUE)
+
+  res <- res |> dplyr::filter(.data$targetCases > minCaseCount, .data$comparatorCases > minCaseCount)
+
+  return(res$outcomeCohortId)
+}
+
+getDefaultTimeAtRisks <- function() {
+  timeAtRisks <- tibble::tibble(
+    label = c("On treatment", "fixed 365d"),
+    riskWindowStart = c(1, 1),
+    startAnchor = c("cohort start", "cohort start"),
+    riskWindowEnd = c(0, 365),
+    endAnchor = c("cohort end", "cohort start"),
+  )
+}
+
 createCmDesign <- function(targetId,
                            comparatorId,
                            indicationId,
                            outcomeCohortIds,
+                           negativeOutcomeCohortIds,
                            dataSources,
-                           excludedCovariateConceptIds) {
+                           excludedCovariateConceptIds, timeAtRisks = getDefaultTimeAtRisks()) {
 
   tcis <- list(
     #standard analyses that would be performed during routine signal detection
@@ -36,14 +64,6 @@ createCmDesign <- function(targetId,
   outcomes <- tibble::tibble(
     cohortId = outcomeCohortIds,
     cleanWindow = c(365)
-  )
-
-  timeAtRisks <- tibble::tibble(
-    label = c("On treatment", "fixed 365d"),
-    riskWindowStart = c(1, 1),
-    startAnchor = c("cohort start", "cohort start"),
-    riskWindowEnd = c(0, 365),
-    endAnchor = c("cohort end", "cohort start"),
   )
 
   studyStartDate <- "20010101" # YYYYMMDD, e.g. "2001-02-01" for January 1st, 2001
@@ -64,7 +84,7 @@ createCmDesign <- function(targetId,
       CohortMethod::createOutcome(
         outcomeId = outcomes$cohortId[i],
         outcomeOfInterest = TRUE,
-        trueEffectSize = NA,
+        trueEffectSize = ifelse(outcomes$cohortId %in% negativeOutcomeCohortIds, 1, NA),
         priorOutcomeLookback = priorOutcomeLookback
       )
     })
@@ -197,7 +217,6 @@ createCmDesign <- function(targetId,
 }
 
 
-
 #' Execute Cohort method analysis
 #' @description
 #' Take cohort method settings and execute on CDM
@@ -214,12 +233,17 @@ executeCohortMethodAnalysis <- function(config, cmConfig) {
   on.exit(DatabaseConnector::disconnect(connection))
 
   if (is.null(cmConfig$outcomeCohortIds))
-    cmConfig$outcomeCohortIds <- getAtlasOutcomeIds(connection, config)
+    cmConfig$outcomeCohortIds <- getCmOutcomes(connection,
+                                               config,
+                                               comparatorId = cmConfig$comparatorId,
+                                               indicationId = cmConfig$indicationId,
+                                               minCaseCount = cmConfig$minCaseCount)
 
   settings <- createCmDesign(targetId = cmConfig$targetId,
                              comparatorId = cmConfig$comparatorId,
                              indicationId = cmConfig$indicationId,
                              outcomeCohortIds = cmConfig$outcomeCohortIds,
+                             negativeOutcomeCohortIds = cmConfig$negativeOutcomeCohortIds,
                              excludedCovariateConceptIds = cmConfig$excludedCovariateConceptIds)
 
   settings$connectionDetails <- config$connectionDetails
@@ -230,7 +254,7 @@ executeCohortMethodAnalysis <- function(config, cmConfig) {
   settings$outcomeTable <- config$tables$cohort
   settings$outputFolder <- file.path(config$workDir, "CohortMethodOutput")
   settings$multiThreadingSettings <- multiThreadingSettings
-  settings$cmDiagnosticThresholds  <- NULL
+  settings$cmDiagnosticThresholds <- NULL
   do.call(CohortMethod::runCmAnalyses, settings)
 
   tryCatch({
