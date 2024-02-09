@@ -96,7 +96,7 @@ createCmDesign <- function(targetId,
       CohortMethod::createOutcome(
         outcomeId = outcomes$cohortId[i],
         outcomeOfInterest = TRUE,
-        trueEffectSize = ifelse(outcomes$cohortId %in% negativeOutcomeCohortIds, 1, NA),
+        trueEffectSize = ifelse(outcomes$cohortId[i] %in% negativeOutcomeCohortIds, 1, NA),
         priorOutcomeLookback = priorOutcomeLookback
       )
     })
