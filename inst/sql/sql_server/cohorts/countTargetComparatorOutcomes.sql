@@ -21,7 +21,7 @@ target as (
 		cohort_start_date as target_start,
 		cohort_end_date as target_end
 	from base_pop 
-	where cohort_definition_id = 43526465000
+	where cohort_definition_id = @target_cohort_id
 
 ),
 
@@ -32,7 +32,7 @@ comparator as (
 		cohort_start_date as comparator_start,
 		cohort_end_date as comparator_end
 	from base_pop 
-	where cohort_definition_id = 1580747000
+	where cohort_definition_id = @comparator_cohort_id
 
 ),
 

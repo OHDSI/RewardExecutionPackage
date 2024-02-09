@@ -15,6 +15,18 @@ getAtlasOutcomeIds <- function(connection, config) {
 }
 
 
+getCmOnlyOutcomeIds <- function(connection, config) {
+  sql <- "SELECT oc.cohort_definition_id FROM @reference_schema.@outcome_cohort oc where oc.outcome_type IN (2, 3)"
+  DatabaseConnector::renderTranslateQuerySql(connection,
+                                             sql,
+                                             snakeCaseToCamelCase = TRUE,
+                                             reference_schema = config$referenceSchema,
+                                             atlas_cohort_reference = config$tables$atlasCohortReference,
+                                             outcome_cohort = config$tables$outcomeCohort)$cohortDefinitionId
+}
+
+
+
 #' get cm outcomes
 #' @export
 getCmOutcomes <- function(connection, config, targetCohortId, comparatorCohortId, minCaseCount = 100) {
@@ -24,7 +36,6 @@ getCmOutcomes <- function(connection, config, targetCohortId, comparatorCohortId
                                            target_cohort_id = targetCohortId,
                                            comparator_cohort_id = comparatorCohortId,
                                            result_database_schema = config$referenceSchema)
-  browser()
   res <- DatabaseConnector::querySql(connection, sql, snakeCaseToCamelCase = TRUE)
 
   res <- res |> dplyr::filter(.data$targetCases > minCaseCount, .data$comparatorCases > minCaseCount)
@@ -233,12 +244,15 @@ executeCohortMethodAnalysis <- function(config, cmConfig) {
   connection <- DatabaseConnector::connect(config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
 
-  if (is.null(cmConfig$outcomeCohortIds))
-    cmConfig$outcomeCohortIds <- getCmOutcomes(connection,
-                                               config,
-                                               comparatorCohortId = cmConfig$comparatorId,
-                                               targetCohortId = cmConfig$targetId,
-                                               minCaseCount = cmConfig$minCaseCount)
+  if (is.null(cmConfig$outcomeCohortIds)) {
+    # cmConfig$outcomeCohortIds <- getCmOutcomes(connection,
+    #                                            config,
+    #                                            comparatorCohortId = cmConfig$comparatorId,
+    #                                            targetCohortId = cmConfig$targetId,
+    #                                            minCaseCount = cmConfig$minCaseCount)
+
+    cmConfig$outcomeCohortIds <- getCmOnlyOutcomeIds(connection, config)
+  }
 
   settings <- createCmDesign(targetId = cmConfig$targetId,
                              comparatorId = cmConfig$comparatorId,
