@@ -41,9 +41,11 @@ getTargetComparatorCaseCounts <- function(connection, config, targetCohortId, co
 
 #' get cm outcomes
 #' @export
-getCmOutcomes <- function(..., minCaseCount = 300) {
+getCmOutcomes <- function(..., minCaseCount = 50, outcomeTypes = c(2, 3)) {
   res <- getTargetComparatorCaseCounts(...)
-  res <- res |> dplyr::filter(.data$targetCases > minCaseCount, .data$comparatorCases > minCaseCount)
+  res <- res |> dplyr::filter(.data$targetCases > minCaseCount,
+                              .data$comparatorCases > minCaseCount,
+                              .data$outcomeType %in% outcomeTypes)
   return(res$outcomeCohortId)
 }
 
