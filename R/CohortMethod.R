@@ -60,16 +60,16 @@ getDefaultTimeAtRisks <- function() {
 }
 
 createCmDesign <- function(targetId,
-                           comparatorId,
+                           comparatorIds,
                            indicationId,
                            outcomeCohortIds,
                            negativeOutcomeCohortIds,
                            dataSources,
                            excludedCovariateConceptIds, timeAtRisks = getDefaultTimeAtRisks()) {
-
-  tcis <- list(
+  tcis <- list()
+  for (comparatorId in comparatorIds) {
     #standard analyses that would be performed during routine signal detection
-    list(
+    tcis[[legnt(tcis) + 1]] <- list(
       targetId = targetId, # e.g New users of ACE inhibitors
       comparatorId = comparatorId, # e.g New users of Alpha-1 Blockers
       indicationId = indicationId, # e.g Hypertension
@@ -78,7 +78,8 @@ createCmDesign <- function(targetId,
       maxAge = NULL, # All ages In years. Can be NULL
       excludedCovariateConceptIds = excludedCovariateConceptIds
     )
-  )
+  }
+  
   outcomes <- tibble::tibble(
     cohortId = outcomeCohortIds,
     cleanWindow = c(365)
