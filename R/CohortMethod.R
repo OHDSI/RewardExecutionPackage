@@ -264,7 +264,7 @@ executeCohortMethodAnalysis <- function(config,
   }
 
   settings <- createCmDesign(targetId = cmConfig$targetId,
-                             comparatorId = cmConfig$comparatorId,
+                             comparatorIds = cmConfig$comparatorId,
                              indicationId = cmConfig$indicationId,
                              outcomeCohortIds = cmConfig$outcomeCohortIds,
                              negativeOutcomeCohortIds = cmConfig$negativeOutcomeCohortIds,
