@@ -28,7 +28,7 @@ Suggests:
     targets,
     keyring
 Remotes:
-    azimov/CohortMethod,
+    OHDSI/CohortMethod,
     OHDSI/SelfControlledCohort,
     OHDSI/ResultModelManager,
     OHDSI/CohortGenerator,
