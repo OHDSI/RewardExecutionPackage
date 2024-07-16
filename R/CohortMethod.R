@@ -69,7 +69,7 @@ createCmDesign <- function(targetId,
   tcis <- list()
   for (comparatorId in comparatorIds) {
     #standard analyses that would be performed during routine signal detection
-    tcis[[legnt(tcis) + 1]] <- list(
+    tcis[[legnth(tcis) + 1]] <- list(
       targetId = targetId, # e.g New users of ACE inhibitors
       comparatorId = comparatorId, # e.g New users of Alpha-1 Blockers
       indicationId = indicationId, # e.g Hypertension
